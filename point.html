@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>แต้มสะสม | ระบบของคุณ</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap');
+
+    :root {
+      --color-primary: #1e40af;
+      --color-secondary: #3b82f6;
+      --color-bg: #f0f5ff;
+      --color-text: #1e293b;
+      --color-card-bg: #ffffff;
+      --shadow: rgba(30, 64, 175, 0.15);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 30px 15px;
+      background-color: var(--color-bg);
+      font-family: 'Kanit', sans-serif;
+      color: var(--color-text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: var(--color-card-bg);
+      border-radius: 20px;
+      padding: 30px 25px;
+      box-shadow: 0 12px 24px var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--color-primary);
+      font-size: 1.9rem;
+      margin-top: 0;
+    }
+
+    .userinfo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px 30px;
+      font-weight: 500;
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+    }
+
+    .userinfo div {
+      background: var(--color-bg);
+      padding: 10px 16px;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(59, 130, 246, 0.1);
+    }
+
+    .points-box {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      color: white;
+      font-size: 3.2rem;
+      font-weight: 900;
+      padding: 30px 20px;
+      border-radius: 30px;
+      box-shadow: 0 15px 30px rgba(30, 64, 175, 0.4);
+      user-select: none;
+      letter-spacing: 5px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .points-label {
+      font-size: 1rem;
+      font-weight: 500;
+      opacity: 0.85;
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+
+    .reward-section {
+      margin-top: 10px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .reward-section h2 {
+      color: var(--color-primary);
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+    }
+
+    .reward-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      max-height: 400px;
+      padding-right: 5px;
+    }
+
+    .reward-card {
+      display: flex;
+      align-items: center;
+      background: #f8fbff;
+      border-radius: 16px;
+      padding: 15px;
+      box-shadow: 0 4px 12px rgba(0, 100, 255, 0.1);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .reward-card:hover:not(.disabled) {
+      box-shadow: 0 6px 20px rgba(0, 100, 255, 0.3);
+    }
+
+    .reward-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background-color: #ddd;
+      object-fit: cover;
+      margin-right: 16px;
+      flex-shrink: 0;
+    }
+
+    .reward-info {
+      flex: 1;
+      user-select: none;
+    }
+
+    .reward-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1e3a8a;
+      margin-bottom: 4px;
+    }
+
+    .reward-desc {
+      font-size: 0.95rem;
+      color: #475569;
+      margin-bottom: 6px;
+      white-space: pre-line;
+    }
+
+    .reward-meta {
+      font-size: 0.9rem;
+      color: #334155;
+    }
+
+    .reward-points {
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .btn-redeem {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .btn-redeem:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 480px) {
+      .userinfo {
+        grid-template-columns: 1fr;
+      }
+
+      .reward-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .reward-img {
+        margin-bottom: 10px;
+      }
+
+      .btn-redeem {
+        width: 100%;
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ข้อมูลส่วนตัว</h1>
+    <div class="userinfo">
+      <div>ชื่อ: <span id="user-name">-</span></div>
+      <div>นามสกุล: <span id="user-lastname">-</span></div>
+      <div>เลขที่: <span id="user-no">-</span></div>
+      <div>เลขประจำตัว: <span id="user-id">-</span></div>
+    </div>
+
+    <div class="points-box" aria-label="คะแนนสะสม">
+      <div id="user-points" aria-live="polite">0</div>
+      <div class="points-label">คะแนนสะสม</div>
+    </div>
+
+    <div class="reward-section">
+      <h2>ของรางวัล</h2>
+      <div class="reward-grid" id="reward-list">
+        <div>กำลังโหลดรายการรางวัล...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec'; // เปลี่ยนเป็น URL GAS ของคุณ
+
+    // โหลดข้อมูลผู้ใช้จาก localStorage (เฉพาะข้อมูลส่วนตัว ไม่เอาแต้ม)
+    function loadUserData() {
+      const userDataStr = localStorage.getItem('user');
+      if (!userDataStr) {
+        alert('ไม่พบข้อมูลผู้ใช้ กรุณาล็อกอินก่อน');
+        return null;
+      }
+      const userData = JSON.parse(userDataStr);
+      document.getElementById('user-name').textContent = userData.firstName || '-';
+      document.getElementById('user-lastname').textContent = userData.lastName || '-';
+      document.getElementById('user-no').textContent = userData.no || '-';
+      document.getElementById('user-id').textContent = userData.studentId || '-';
+      return userData;
+    }
+
+    // ดึงแต้มล่าสุดจาก GAS
+    async function fetchUserPoints(no) {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getUserPoints&no=${encodeURIComponent(no)}`);
+        const data = await res.json();
+        if (!data.success) throw new Error("โหลดแต้มไม่สำเร็จ");
+        return data.points;
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    }
+
+    // ดึงรางวัลจาก GAS
+    async function fetchRewards(userPoints, userNo) {
+      try {
+        const res = await fetch(`${GAS_URL}?action=getRewards`);
+        const data = await res.json();
+        if (!data.success) throw new Error("โหลดข้อมูลรางวัลล้มเหลว");
+
+        const list = document.getElementById('reward-list');
+        list.innerHTML = '';
+
+        if (data.rewards.length === 0) {
+          list.innerHTML = '<div>ไม่มีของรางวัลให้แลกในขณะนี้</div>';
+          return;
+        }
+
+        data.rewards.forEach(r => {
+          const hasClaimed = r.claimedList.includes(String(userNo));
+          const enoughPoints = userPoints >= Number(r.price);
+          const canRedeem = !hasClaimed && (r.quantity === 'U' || Number(r.quantity) > r.claimedList.length);
+
+          const card = document.createElement('div');
+          card.className = 'reward-card' + (!canRedeem ? ' disabled' : '');
+
+          const img = document.createElement('img');
+          img.className = 'reward-img';
+          img.alt = r.name;
+          img.src = (r.type === 'D')
+            ? 'https://cdn-icons-png.flaticon.com/512/1040/1040230.png'
+            : (r.imageUrl || 'https://cdn-icons-png.flaticon.com/512/847/847969.png');
+
+          const info = document.createElement('div');
+          info.className = 'reward-info';
+          info.innerHTML = `
+            <div class="reward-name">${r.name}</div>
+            <div class="reward-desc">${r.desc}</div>
+            <div class="reward-meta">
+              <span class="reward-points">แต้ม: ${r.price}</span><br/>
+              จำนวน: ${r.quantity === 'U' ? 'ไม่จำกัด' : r.quantity}<br/>
+              หมดเขต: ${r.expireDate}
+            </div>
+          `;
+
+          const button = document.createElement('button');
+          button.className = 'btn-redeem';
+          button.textContent = hasClaimed ? 'แลกแล้ว' : 'แลกรางวัล';
+          button.disabled = !canRedeem;
+
+          button.onclick = async () => {
+            if (!confirm(`คุณต้องการแลกรางวัล "${r.name}" ใช่หรือไม่?`)) return;
+            try {
+              const res = await fetch(`${GAS_URL}?action=redeemReward&no=${userNo}&rewardId=${r.id}&points=${userPoints}`);
+              const result = await res.json();
+
+              if (result.success) {
+                alert("แลกรางวัลสำเร็จ!");
+                // อัปเดตแต้มบนหน้าเว็บ (ไม่เก็บ localStorage)
+                document.getElementById('user-points').textContent = result.newPoints;
+                // รีโหลดรางวัลใหม่ด้วยแต้มล่าสุด
+                fetchRewards(result.newPoints, userNo);
+              } else {
+                alert(`แลกไม่สำเร็จ: ${result.message}`);
+              }
+            } catch (err) {
+              console.error(err);
+              alert("เกิดข้อผิดพลาดในการแลกรางวัล");
+            }
+          };
+
+          card.appendChild(img);
+          card.appendChild(info);
+          card.appendChild(button);
+          list.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+        document.getElementById('reward-list').innerHTML = '<div>เกิดข้อผิดพลาดในการโหลดของรางวัล</div>';
+      }
+    }
+
+    window.onload = async () => {
+      const user = loadUserData();
+      if (!user) return;
+      const points = await fetchUserPoints(user.no);
+      if (points !== null) {
+        document.getElementById('user-points').textContent = points;
+        fetchRewards(points, user.no);
+      } else {
+        alert('ไม่สามารถโหลดแต้มจากระบบได้ กรุณาลองใหม่ภายหลัง');
+        document.getElementById('user-points').textContent = '0';
+        fetchRewards(0, user.no);
+      }
+    };
+  </script>
+</body>
+</html>
