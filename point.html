@@ -169,7 +169,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>ข้อมูลส่วนตัว (BETA 1)</h1>
+    <h1>ข้อมูลส่วนตัว (BETA 2)</h1>
     <div class="userinfo">
       <div>ชื่อ: <span id="user-name">-</span></div>
       <div>นามสกุล: <span id="user-lastname">-</span></div>
@@ -245,12 +245,13 @@
 
           const detail = document.createElement('div');
           detail.className = 'reward-detail';
-          detail.innerHTML = `
-            <div>${r.desc}</div>
-            <button class="btn-redeem" ${!canRedeem || !enough ? 'disabled' : ''}>
-              ${hasClaimed ? 'แลกแล้ว' : 'แลกรางวัล'}
-            </button>
-          `;
+          detail.innerHTML = `<div>${r.desc}</div>`;
+const btn = document.createElement('button');
+btn.className = 'btn-redeem';
+btn.textContent = hasClaimed ? 'แลกแล้ว' : 'แลกรางวัล';
+btn.disabled = !canRedeem || !enough;
+btn.onclick = () => redeemReward(r.id, points, no, btn);
+detail.appendChild(btn);
 
           header.addEventListener('click', () => {
             card.classList.toggle('open');
@@ -264,6 +265,28 @@
         console.error(err);
       }
     }
+
+    async function redeemReward(rewardId, points, userNo, buttonEl) {
+  if (!confirm("คุณต้องการแลกรางวัลนี้ใช่หรือไม่?")) return;
+
+  try {
+    const res = await fetch(`${GAS_URL}?action=redeemReward&no=${userNo}&rewardId=${rewardId}&points=${points}`);
+    const result = await res.json();
+
+    if (result.success) {
+      alert("แลกรางวัลสำเร็จ!");
+      document.getElementById("user-points").textContent = result.newPoints;
+      buttonEl.textContent = "แลกแล้ว";
+      buttonEl.disabled = true;
+    } else {
+      alert(`แลกไม่สำเร็จ: ${result.message}`);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("เกิดข้อผิดพลาดในการแลกรางวัล");
+  }
+}
+
 
     window.onload = async () => {
       const user = loadUserData();
