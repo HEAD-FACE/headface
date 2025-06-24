@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>รางวัลที่แลกมา (beta)</title>
+  <title>รางวัลที่แลกมา</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap');
     body {
@@ -12,6 +12,7 @@
       margin: 0; padding: 20px;
       display: flex; justify-content: center;
     }
+
     .container {
       max-width: 600px;
       width: 100%;
@@ -20,96 +21,78 @@
       padding: 25px;
       box-shadow: 0 8px 24px rgba(30,64,175,0.15);
     }
+
     h1 {
       text-align: center;
       color: #1e40af;
       margin-bottom: 20px;
     }
+
     .reward-list {
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
+
     .reward-card {
       background: #e0e7ff;
       border-radius: 12px;
       padding: 15px 20px;
-      box-shadow: 0 2px 10px rgba(30, 64, 175, 0.1);
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-    .reward-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(30, 64, 175, 0.1);
     }
+
+    .reward-info {
+      flex-grow: 1;
+      margin-right: 20px;
+    }
+
     .reward-name {
       font-weight: 700;
       font-size: 1.1rem;
       color: #1e3a8a;
     }
-    .reward-details {
-      margin-top: 10px;
-      display: none;
-      color: #374151;
-    }
-    .btn-used, .btn-use {
+
+    .btn-use {
+      background: #2563eb;
       border: none;
       color: white;
       padding: 8px 14px;
       border-radius: 10px;
+      cursor: pointer;
       font-weight: 600;
       transition: background 0.3s ease;
     }
-    .btn-use {
-      background: #2563eb;
-      cursor: pointer;
-    }
+
     .btn-use:hover {
       background: #1e40af;
     }
+
     .btn-used {
       background: #9ca3af;
       cursor: default;
     }
+
     .no-reward {
       text-align: center;
       color: #475569;
       margin-top: 40px;
       font-size: 1.1rem;
     }
-    .bottom-link {
-      display: block;
-      margin-top: 30px;
-      text-align: center;
-    }
-    .bottom-link a {
-      background: #1e3a8a;
-      color: white;
-      display: block;
-      padding: 12px;
-      text-decoration: none;
-      font-weight: 700;
-      border-radius: 12px;
-    }
-    .bottom-link a:hover {
-      background: #1d2d72;
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>รางวัลที่แลกมา</h1>
+    <h1>รางวัลที่แลกมา (BETA 1)</h1>
     <div id="reward-list" class="reward-list">
       กำลังโหลดรางวัล...
     </div>
-    <div class="bottom-link">
-      <a href="point.html">ดูรางวัลสำหรับการใช้</a>
-    </div>
   </div>
+
   <script>
-    const GAS_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec'; // URL ของคุณ
 
     function loadUser() {
       const userStr = localStorage.getItem('user');
@@ -138,32 +121,29 @@
           const card = document.createElement('div');
           card.className = 'reward-card';
 
-          const header = document.createElement('div');
-          header.className = 'reward-header';
-          header.innerHTML = `<div class="reward-name">${r.name}</div><div>แต้ม: ${r.price}</div>`;
+          const info = document.createElement('div');
+          info.className = 'reward-info';
+          info.innerHTML = `<div class="reward-name">${r.name}</div><div>แต้ม: ${r.price}</div>`;
 
-          const details = document.createElement('div');
-          details.className = 'reward-details';
-          details.innerHTML = `<div>รหัส: ${r.id}</div><div>วันหมดเขต: ${r.expireDate || 'ไม่ระบุ'}</div><div>จำนวน: ${r.quantity || 'ไม่ระบุ'}</div>`;
+          const usedList = Array.isArray(r.usedList)
+            ? r.usedList.filter(e => e && e.trim() !== "")
+            : [];
 
-          header.onclick = () => {
-            details.style.display = details.style.display === 'none' ? 'block' : 'none';
-          };
-
-          const usedList = Array.isArray(r.usedList) ? r.usedList : [];
           const alreadyUsed = usedList.includes(String(userNo));
 
           const btnUse = document.createElement('button');
-          btnUse.className = alreadyUsed ? 'btn-used' : 'btn-use';
-          btnUse.textContent = alreadyUsed ? 'ใช้แล้ว' : 'ใช้รางวัล';
-          if (!alreadyUsed) {
-            btnUse.onclick = () => useReward(r.id, btnUse);
-          } else {
+          btnUse.className = 'btn-use';
+
+          if (alreadyUsed) {
+            btnUse.textContent = 'ใช้แล้ว';
+            btnUse.classList.add('btn-used');
             btnUse.disabled = true;
+          } else {
+            btnUse.textContent = 'ใช้รางวัล';
+            btnUse.onclick = () => useReward(r.id, btnUse);
           }
 
-          card.appendChild(header);
-          card.appendChild(details);
+          card.appendChild(info);
           card.appendChild(btnUse);
           listEl.appendChild(card);
         });
@@ -176,16 +156,18 @@
     async function useReward(rewardId, buttonEl) {
       const user = loadUser();
       if (!user) return;
+
       if (!confirm(`ต้องการใช้รางวัลนี้หรือไม่? รางวัล ID: ${rewardId}`)) return;
 
       try {
         const res = await fetch(`${GAS_URL}?action=useReward&no=${encodeURIComponent(user.no)}&rewardId=${encodeURIComponent(rewardId)}`);
         const result = await res.json();
+
         if (result.success) {
           alert('ใช้รางวัลเรียบร้อยแล้ว');
+          // ✅ อัปเดตปุ่มทันทีโดยไม่ต้องโหลดใหม่
           buttonEl.textContent = 'ใช้แล้ว';
           buttonEl.classList.add('btn-used');
-          buttonEl.classList.remove('btn-use');
           buttonEl.disabled = true;
         } else {
           alert('ไม่สามารถใช้รางวัลได้: ' + (result.message || 'เกิดข้อผิดพลาด'));
