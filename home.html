@@ -248,27 +248,33 @@ function renderHomework(homeworks, allHomeworks = null) {
     }
 
     html += `
-      <div class="${boxColor} border border-gray-300 rounded-xl p-4">
-        <h3 class="text-lg font-semibold text-blue-700">${hw.subject}</h3>
-        <p><strong>รายละเอียด:</strong> ${hw.title}</p>
-        <p><strong>กำหนดส่ง:</strong> ${hw.due_date}</p>
-        <p><strong>สถานะ:</strong>
-          <span class="${isSubmitted ? "text-green-600" : "text-red-500"}">
-            ${isSubmitted ? "ส่งแล้ว" : "ยังไม่ส่ง"}
-          </span>
-        </p>
-        ${
-          isSubmitted
-            ? ""
-            : `<button
-                onclick="markAsSubmitted('${hw.id}')"
-                class="mt-2 bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded-lg"
-              >
-                บันทึกว่าส่งแล้ว
-              </button>`
-        }
-      </div>
-    `;
+  <div class="${boxColor} border border-gray-300 rounded-xl p-4">
+    <h3 class="text-lg font-semibold text-blue-700">${hw.subject}</h3>
+    <p><strong>รายละเอียด:</strong> ${hw.title}</p>
+    <p><strong>กำหนดส่ง:</strong> ${hw.due_date}</p>
+    <p><strong>สถานะ:</strong>
+      <span class="${isSubmitted ? "text-green-600" : "text-red-500"}">
+        ${isSubmitted ? "ส่งแล้ว" : "ยังไม่ส่ง"}
+      </span>
+    </p>
+    ${
+      isSubmitted
+        ? `<button
+             onclick="unmarkAsSubmitted('${hw.id}')"
+             class="mt-2 bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg"
+           >
+             ยกเลิกบันทึกว่าส่งแล้ว
+           </button>`
+        : `<button
+             onclick="markAsSubmitted('${hw.id}')"
+             class="mt-2 bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded-lg"
+           >
+             บันทึกว่าส่งแล้ว
+           </button>`
+    }
+  </div>
+`;
+
   });
 
   list.innerHTML = html;
@@ -463,6 +469,34 @@ function applyFilter() {
 
       closeBtn.addEventListener("click", closeSidebar);
       overlay.addEventListener("click", closeSidebar);
+
+      async function unmarkAsSubmitted(hwId) {
+  const ok = confirm("ยืนยันยกเลิกการบันทึกว่าส่งแล้ว?");
+  if (!ok) return;
+
+  try {
+    const url = `https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec?action=unsubmit&no=${user.no}&hw_id=${hwId}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.status === "success") {
+      // ปรับ localStorage
+      const hwList = JSON.parse(localStorage.getItem("hw_data"));
+      const updated = hwList.map(hw => {
+        if (hw.id === hwId) hw.submitted = false;
+        return hw;
+      });
+      localStorage.setItem("hw_data", JSON.stringify(updated));
+
+      renderHomework(updated);      // รีเฟรชหน้าจอ
+    } else {
+      alert("ยกเลิกไม่สำเร็จ");
+    }
+  } catch (err) {
+    alert("เกิดข้อผิดพลาดในการยกเลิก");
+  }
+}
+
     </script>
      <a href='http://www.freevisitorcounters.com'>www.Freevisitorcounters</a> <script type='text/javascript' src='https://www.freevisitorcounters.com/auth.php?id=0c410dfcdd15ce30d800ce11733435bf89386a35'></script>
 <script type="text/javascript" src="https://www.freevisitorcounters.com/en/home/counter/1351601/t/1"></script>
