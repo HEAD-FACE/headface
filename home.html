@@ -37,13 +37,14 @@
 
       <!-- Overlay (คลิกเพื่อปิดเมนู) -->
       <div id="overlay" class="fixed inset-0 bg-black bg-opacity-30 hidden z-30"></div>
-      <h1 class="text-2xl font-bold text-blue-700" style="padding-left: 30px; padding-top: 5px;">HEAD FACE 1.1</h1>
+      <h1 class="text-2xl font-bold text-blue-700" style="padding-left: 30px; padding-top: 5px;">HEAD FACE 1.2 (BETA)</h1>
       <button
         id="logout-btn"
         class="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-xl font-semibold"
       >
         ล็อกเอาท์
       </button>
+      <a href="#" id="open-upgrade" class="block text-blue-600 hover:underline">อัปเกรด</a>
     </div>
 <!-- กล่องข้อความด้านบน -->
 <div class="max-w-4xl mx-auto mt-4 px-4">
@@ -498,6 +499,47 @@ function applyFilter() {
 }
 
     </script>
+    <!-- ─────────────  Modal Upgrade  ───────────── -->
+<div id="upgrade-modal"
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] hidden">
+  <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center"
+       onclick="event.stopPropagation()">
+    <h2 class="text-xl font-bold text-blue-800 mb-4">เลือกการใช้งาน</h2>
+    <p class="text-gray-600 mb-6">กรุณาเลือกว่าคุณต้องการทำอะไร</p>
+
+    <div class="space-y-3">
+      <a href="https://liff.line.me/2007333047-XVaQjnmO"
+         class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition">
+        ลงทะเบียน
+      </a>
+
+      <a href="https://form.jotform.com/251154265951053"
+         class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-xl transition">
+        ต่ออายุการใช้งาน
+      </a>
+
+      <button id="close-upgrade"
+              class="w-full text-sm text-gray-500 hover:text-gray-700 mt-4">
+        ยกเลิก
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── ปุ่มเปิด / ปิด modal
+  document.getElementById("open-upgrade")?.addEventListener("click", e => {
+    e.preventDefault();
+    document.getElementById("upgrade-modal").classList.remove("hidden");
+  });
+  document.getElementById("upgrade-modal").addEventListener("click", () => {
+    document.getElementById("upgrade-modal").classList.add("hidden");
+  });
+  document.getElementById("close-upgrade").addEventListener("click", () => {
+    document.getElementById("upgrade-modal").classList.add("hidden");
+  });
+</script>
+
      <a href='http://www.freevisitorcounters.com'>www.Freevisitorcounters</a> <script type='text/javascript' src='https://www.freevisitorcounters.com/auth.php?id=0c410dfcdd15ce30d800ce11733435bf89386a35'></script>
 <script type="text/javascript" src="https://www.freevisitorcounters.com/en/home/counter/1351601/t/1"></script>
   </body>
