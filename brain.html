@@ -2,23 +2,23 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Brain Food – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen">
 
-<!-- Header -->
+<!-- ───────────── Header ───────────── -->
 <header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
-  <h1 class="text-xl font-bold text-blue-700">Brain Food</h1>
+  <h1 class="text-xl font-bold text-blue-700">Brain Food (BETA)</h1>
   <a href="home.html"
      class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
-     กลับหน้า&nbsp;หลัก
+     กลับหน้าหลัก
   </a>
 </header>
 
-<!-- Dashboard -->
+<!-- ───────────── Dashboard ───────────── -->
 <section class="max-w-3xl mx-auto mt-6 grid grid-cols-2 gap-4">
   <div class="bg-white/80 rounded-xl p-4 text-center shadow">
     <p class="text-gray-500">บทที่เรียน</p>
@@ -30,7 +30,7 @@
   </div>
 </section>
 
-<!-- Menu boxes -->
+<!-- ───────────── Set Boxes ───────────── -->
 <section class="max-w-4xl mx-auto mt-10 grid md:grid-cols-3 gap-6 px-4">
 
   <!-- Snack -->
@@ -41,7 +41,7 @@
       <span class="text-white text-xl font-bold">Snack Set</span>
     </div>
     <p class="mt-2 text-center text-sm text-gray-700">
-      สรุปสั้น กระชับ + Quiz 5 ข้อ
+      สรุปสั้น + Quiz 5 ข้อ
     </p>
   </div>
 
@@ -56,14 +56,14 @@
       บทเรียนเต็ม + Quiz 15 ข้อ (เฉพาะ MAX)
     </p>
 
-    <!-- Overlay lock -->
     <div id="lock-full"
-         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur flex flex-col items-center justify-center text-center text-purple-600 font-semibold hidden">
-      <p>เฉพาะ MAX</p>
+         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur flex flex-col items-center justify-center
+                text-center text-purple-600 font-semibold hidden">
+      เฉพาะ MAX
     </div>
   </div>
 
-  <!-- Salad -->
+  <!-- Salad (ยังไม่ได้ทำในขั้นนี้) -->
   <div id="box-salad" class="group relative cursor-pointer">
     <div
       class="bg-gradient-to-r from-teal-400 to-cyan-500 rounded-2xl h-40 flex items-center justify-center shadow-lg
@@ -71,128 +71,124 @@
       <span class="text-white text-xl font-bold">Salad Set</span>
     </div>
     <p class="mt-2 text-center text-sm text-gray-700">
-      Quiz รวม ทุกบท (20 ข้อ)
+      Quiz รวมทุกบท (20 ข้อ)
     </p>
 
     <div id="lock-salad"
-         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur flex flex-col items-center justify-center text-center text-cyan-700 font-semibold hidden">
-      <p>เฉพาะ MAX</p>
+         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur flex flex-col items-center justify-center
+                text-center text-cyan-700 font-semibold hidden">
+      เฉพาะ MAX
     </div>
   </div>
-
 </section>
 
-<!-- Modal container -->
+<!-- Modal root -->
 <div id="modal-root"></div>
 
+<!-- ───────────── Script ───────────── -->
 <script>
-/* --------- user & MAX check --------- */
-const user   = JSON.parse(localStorage.getItem("user") || "null");
-const isMAX  = !!user?.lineId;
+/* ---------- CONFIG ---------- */
+const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
 
-if (!isMAX) {
+/* ---------- USER / MAX ---------- */
+const user  = JSON.parse(localStorage.getItem("user") || "null");
+const isMAX = !!user?.lineId;
+
+if(!isMAX){
   document.getElementById("lock-full").classList.remove("hidden");
   document.getElementById("lock-salad").classList.remove("hidden");
 }
 
-/* --------- dashboard --------- */
+/* ---------- DASHBOARD ---------- */
 (async()=>{
-  if (!user) return;
-  const r = await fetch(
-    "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec"+
-    `?action=get_brain_stats&no=${user.no}`
-  );
-  const j = await r.json();
-  if (j.status==="success"){
-    const [l,q] = j.count.split(" ");
-    document.getElementById("stat-lesson").textContent = l;
-    document.getElementById("stat-quiz").textContent   = q;
-  }
+  if(!user) return;
+  try{
+    const j = await fetch(`${API}?action=get_brain_stats&no=${user.no}`).then(r=>r.json());
+    if(j.status==="success"){
+      const [l,q] = j.count.split(" ");
+      document.getElementById("stat-lesson").textContent = l;
+      document.getElementById("stat-quiz").textContent   = q;
+    }
+  }catch(e){ console.log("stats error",e); }
 })();
 
-/* --------- helper modal --------- */
+/* ---------- MODAL helper ---------- */
 function openModal(html){
-  const root=document.getElementById("modal-root");
-  root.innerHTML=`<div id="mask" class="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center">
-     <div class="bg-white rounded-xl shadow-xl max-w-xl w-full p-6">${html}</div></div>`;
-  document.getElementById("mask").onclick=e=>{
-     if(e.target.id==="mask") root.innerHTML="";
+  document.getElementById("modal-root").innerHTML =
+    `<div id="mask" class="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center">
+       <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">${html}</div>
+     </div>`;
+  document.getElementById("mask").onclick = e=>{
+    if(e.target.id==="mask") closeModal();
   };
 }
 function closeModal(){ document.getElementById("modal-root").innerHTML=""; }
 
-const API="https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
-
-/* --------- Snack Set --------- */
+/* ------------------------------------------------------------- */
+/*                        SNACK  FLOW                            */
+/* ------------------------------------------------------------- */
 document.getElementById("box-snack").onclick = async ()=>{
+  // 1) list subjects
   const j = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
   if(j.status!=="success") return alert("โหลดวิชาไม่สำเร็จ");
 
-  const list = j.subjects.map(s=>
-     `<button class="sn-sub bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-xl m-1"
-              data-subj="${s.code}">${s.name}</button>`
-  ).join("");
-  openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-4">เลือกวิชา</h3>${list}`);
+  const html = j.subjects.map(s=>`
+      <button class="sn-sub bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-xl m-1"
+              data-subj="${s.code}">${s.name}</button>`).join("");
+  openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-3">เลือกวิชา (Snack)</h3>${html}`);
 
   document.querySelectorAll(".sn-sub").forEach(btn=>{
-     btn.onclick=()=> chooseChapter_snack(btn.dataset.subj);
+     btn.onclick = ()=> chooseChapter(btn.dataset.subj,"snack");
   });
 };
 
-async function chooseChapter_snack(subj){
-  const j = await fetch(`${API}?action=list_snack_chapters&subj=${subj}`).then(r=>r.json());
-  if(j.status!=="success") return alert("error");
-
-  const list = j.chapters.map(c=>
-     `<button class="sn-chap block w-full text-left bg-gray-100 hover:bg-gray-200
-                   rounded-xl px-4 py-2 my-1" data-chap="${c.id}">
-        ${c.title}
-      </button>`
-  ).join("");
-  openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-4">เลือกบท – ${subj}</h3>${list}`);
-
-  document.querySelectorAll(".sn-chap").forEach(btn=>{
-     btn.onclick = ()=> location.href = `lesson.html?id=${btn.dataset.chap}`; // ⇦ เปลี่ยนหน้า
-  });
-}
-
-  async function chooseChapter_full(subj){
-  const j = await fetch(`${API}?action=list_snack_chapters&subj=${subj}`).then(r=>r.json());
-  if(j.status!=="success") return alert("error");
-
-  const list = j.chapters.map(c=>
-     `<button class="sn-chap block w-full text-left bg-gray-100 hover:bg-gray-200
-                   rounded-xl px-4 py-2 my-1" data-chap="${c.id}">
-        ${c.title}
-      </button>`
-  ).join("");
-  openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-4">เลือกบท – ${subj}</h3>${list}`);
-
-  document.querySelectorAll(".sn-chap").forEach(btn=>{
-     btn.onclick = ()=> location.href = `full.html?id=${btn.dataset.chap}`; // ⇦ เปลี่ยนหน้า
-  });
-}
-  
-/* --- Full & Salad (เดิม) --- */
-document.getElementById("box-full").onclick = document.getElementById("box-snack").onclick = async ()=>{
+/* ------------------------------------------------------------- */
+/*                        FULL  FLOW                             */
+/* ------------------------------------------------------------- */
+document.getElementById("box-full").onclick = async ()=>{
+  if(!isMAX){
+    alert("ฟีเจอร์นี้สงวนสำหรับ MAX"); return;
+  }
+  // ใช้ API เดียวกับ snack ได้เลย
   const j = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
   if(j.status!=="success") return alert("โหลดวิชาไม่สำเร็จ");
 
-  const list = j.subjects.map(s=>
-     `<button class="sn-sub bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-xl m-1"
-              data-subj="${s.code}">${s.name}</button>`
-  ).join("");
-  openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-4">เลือกวิชา</h3>${list}`);
+  const html = j.subjects.map(s=>`
+      <button class="fl-sub bg-indigo-100 hover:bg-indigo-200 px-4 py-2 rounded-xl m-1"
+              data-subj="${s.code}">${s.name}</button>`).join("");
+  openModal(`<h3 class="text-lg font-semibold text-indigo-800 mb-3">เลือกวิชา (Full Meal)</h3>${html}`);
 
-  document.querySelectorAll(".sn-sub").forEach(btn=>{
-     btn.onclick=()=> chooseChapter_full(btn.dataset.subj);
+  document.querySelectorAll(".fl-sub").forEach(btn=>{
+     btn.onclick = ()=> chooseChapter(btn.dataset.subj,"full");
   });
 };
-  
-document.getElementById("box-salad").onclick = ()=>{
-  if(isMAX) alert("Salad Set – (อยู่ระหว่างพัฒนา)");
-  else      alert("ฟีเจอร์นี้สำหรับ MAX เท่านั้น");
-};
+
+/* ------------------------------------------------------------- */
+/*                เลือกบท (ใช้ได้ทั้งสองโหมด)                  */
+/* ------------------------------------------------------------- */
+async function chooseChapter(subj,mode){
+  const j = await fetch(`${API}?action=list_${mode}_chapters&subj=${subj}`).then(r=>r.json());
+  if(j.status!=="success") return alert("error");
+
+  const html = j.chapters.map(c=>`
+      <button class="chap-btn block w-full text-left px-4 py-2 my-1 rounded-xl
+                     ${mode==='snack'?'bg-gray-100 hover:bg-gray-200':'bg-purple-100 hover:bg-purple-200'}
+                     " data-id="${c.id}">
+         ${c.title}
+      </button>`).join("");
+
+  openModal(`<h3 class="text-lg font-semibold ${mode==='snack'?'text-blue-800':'text-purple-800'} mb-3">
+               เลือกบท – ${subj}
+             </h3>${html}`);
+
+  document.querySelectorAll(".chap-btn").forEach(btn=>{
+     const id = btn.dataset.id;
+     btn.onclick = ()=>{
+        if(mode==="snack") location.href = `lesson.html?id=${id}`;
+        else               location.href = `full.html?id=${id}`;
+     };
+  });
+}
 </script>
 </body>
 </html>
