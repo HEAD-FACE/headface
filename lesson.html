@@ -6,58 +6,111 @@
   <title>บทเรียน – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex items-center justify-center">
 
-  <div id="box" class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4">
-    <!-- สไลด์จะเติมตรงนี้ -->
+<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
+  <h1 class="text-lg md:text-xl font-bold text-blue-700">
+    บทเรียน&nbsp;<span id="lesson-id"></span>
+  </h1>
+  <a href="snack.html"
+     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
+     กลับ Snack
+  </a>
+</header>
+
+<!-- Content -->
+<main class="flex-1 flex items-center justify-center p-4">
+  <div id="box"
+       class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 space-y-6 text-center
+              transition-all min-h-[22rem] flex flex-col justify-between">
+
+    <!-- สไลด์ -->
+    <div id="slideArea" class="space-y-4"></div>
+
+    <!-- ปุ่มควบคุม -->
+    <div class="flex flex-wrap gap-2 justify-between pt-4 border-t">
+      <button id="prevBtn"
+              class="flex-1 px-4 py-1 bg-gray-200 rounded text-gray-600 min-w-[5rem]">
+        ย้อน
+      </button>
+
+      <button id="quizBtn"
+              class="flex-1 px-4 py-1 bg-green-500 hover:bg-green-600 text-white rounded min-w-[5rem]">
+        ทำ Quiz
+      </button>
+
+      <button id="nextBtn"
+              class="flex-1 px-4 py-1 bg-blue-600 text-white rounded min-w-[5rem]">
+        ถัดไป
+      </button>
+    </div>
+
+    <!-- Full meal -->
+    <button id="fullBtn"
+            class="mt-4 w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl">
+      ดู&nbsp;Full&nbsp;Meal
+    </button>
   </div>
+</main>
 
-  <script>
-  /* ---------- config ---------- */
-  const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+<script>
+const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
 
-  /* ---------- อ่าน query id=ST001 ---------- */
-  const params = new URLSearchParams(location.search);
-  const chapId = params.get("id");
-  if (!chapId) { alert("ไม่พบรหัสบท"); history.back(); }
+/* ---------- รับ id จาก query ---------- */
+const params = new URLSearchParams(location.search);
+const chapId = params.get("id");
+if(!chapId){
+  alert("ไม่พบรหัสบท"); location.href="snack.html";
+}
+document.getElementById("lesson-id").textContent = chapId;
 
-  /* ---------- ดึงสไลด์ ---------- */
-  fetch(`${API}?action=get_snack_slides&id=`+chapId)
-    .then(r=>r.json())
-    .then(showSlides)
-    .catch(()=>alert("โหลดบทเรียนไม่สำเร็จ"));
-
-  /* ---------- เรนเดอร์ & นำทาง ---------- */
-  function showSlides(j){
-    if (j.status!=="success"||!j.slides.length){
-      alert("ไม่พบสไลด์"); history.back(); return;
-    }
-    let idx=0; render();
-
-    function render(){
-      const s = j.slides[idx];
-      const box = document.getElementById("box");
-      box.innerHTML = `
-          <h2 class="text-center text-blue-700 font-bold mb-3">
-            สไลด์ ${idx+1}/${j.slides.length}
-          </h2>
-          ${s.img ? `<img src="${s.img}" class="mx-auto mb-3 max-h-52 object-contain">` : ""}
-          <p class="text-gray-700 whitespace-pre-wrap mb-4">${s.text}</p>
-          <div class="flex justify-between">
-            <button id="backBtn"  class="px-4 py-1 bg-gray-200 rounded
-                    ${idx?"" : "opacity-30 cursor-default"}"
-                    ${idx?"" : "disabled"}>ย้อน</button>
-            <button id="nextBtn"  class="px-4 py-1 bg-blue-600 text-white rounded">
-              ${idx===j.slides.length-1 ? "ไป Quiz" : "ถัดไป"}
-            </button>
-          </div>`;
-      document.getElementById("backBtn")?.addEventListener("click",()=>{idx--;render();});
-      document.getElementById("nextBtn").addEventListener("click",()=>{
-         if(idx<j.slides.length-1){idx++;render();}
-         else{ alert("ต่อไปจะเข้าหน้า Quiz (ยังไม่ทำ)"); }
-      });
-    }
+/* ---------- โหลดสไลด์ ---------- */
+let slides = [], idx = 0;
+(async()=>{
+  const j = await fetch(`${API}?action=get_snack_slides&id=${chapId}`).then(r=>r.json());
+  if(j.status!=="success" || j.slides.length===0){
+     alert("ไม่พบสไลด์"); location.href="snack.html"; return;
   }
-  </script>
+  slides = j.slides; idx = 0; render();
+})();
+
+/* ---------- เรนเดอร์ ---------- */
+function render(){
+  const s = slides[idx];
+  const area = document.getElementById("slideArea");
+
+  area.innerHTML = `
+    <h2 class="text-blue-700 font-bold">สไลด์ ${idx+1}/${slides.length}</h2>
+    ${s.img ? `<img src="${s.img}" class="mx-auto max-h-56 object-contain mb-3">` : ""}
+    <p class="text-gray-700 whitespace-pre-wrap text-left">${s.text}</p>
+  `;
+
+  document.getElementById("prevBtn").disabled = idx===0;
+  document.getElementById("prevBtn").classList.toggle("opacity-30", idx===0);
+  document.getElementById("nextBtn").disabled = idx===slides.length-1;
+  document.getElementById("nextBtn").classList.toggle("opacity-30", idx===slides.length-1);
+}
+
+/* ---------- ปุ่มควบคุม ---------- */
+document.getElementById("prevBtn").onclick = ()=>{
+  if(idx>0){ idx--; render(); }
+};
+
+document.getElementById("nextBtn").onclick = ()=>{
+  if(idx < slides.length-1){ idx++; render(); }
+};
+
+document.getElementById("quizBtn").onclick = ()=>{
+  // ไปหน้า Quiz (เตรียมไว้)
+  location.href = `quiz.html?id=${chapId}&mode=snack`;
+};
+
+document.getElementById("fullBtn").onclick = ()=>{
+  // ไปหน้า Full meal (เตรียมไว้)
+  location.href = `fullmeal.html?id=${chapId}`;
+};
+</script>
 </body>
 </html>
