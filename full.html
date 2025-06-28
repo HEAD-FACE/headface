@@ -2,144 +2,121 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Full Meal – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gradient-to-br from-indigo-100 to-purple-200 min-h-screen flex flex-col">
 
+<!-- Header -->
 <header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
   <h1 class="text-lg md:text-xl font-bold text-purple-700">Full Meal – บทเรียนเต็ม</h1>
-  <a href="snack.html" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1 rounded-xl font-semibold">กลับ Snack Set</a>
+  <a href="snack.html"
+     class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1 rounded-xl font-semibold">
+     กลับ Snack Set
+  </a>
 </header>
 
-<main class="flex-1 flex flex-col justify-center items-center p-4 max-w-3xl mx-auto w-full">
-  <div id="contentBox" class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-xl space-y-4 min-h-[24rem] flex flex-col justify-between">
+<!-- Main -->
+<main class="flex-1 flex flex-col items-center justify-center p-4 max-w-3xl mx-auto w-full">
+  <div id="box"
+       class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-xl min-h-[24rem] flex flex-col justify-between space-y-4">
 
-    <!-- สไลด์แสดงเนื้อหา -->
-    <div id="slideArea" class="space-y-4"></div>
+    <!-- สไลด์ -->
+    <div id="slideArea" class="space-y-4 grow"></div>
 
-    <!-- ปุ่มควบคุม -->
+    <!-- ปุ่ม -->
     <div class="flex gap-3 justify-between pt-4 border-t">
-      <button id="prevBtn" class="flex-1 px-4 py-2 bg-gray-200 rounded text-gray-600 min-w-[5rem] disabled:opacity-40" disabled>ย้อน</button>
+      <button id="prevBtn" class="flex-1 px-4 py-2 bg-gray-200 rounded text-gray-600 disabled:opacity-40" disabled>
+        ย้อน
+      </button>
 
-      <button id="quizBtn" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded min-w-[5rem]">ทำ Quiz</button>
+      <button id="quizBtn" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
+        ทำ Quiz
+      </button>
 
-      <button id="nextBtn" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded min-w-[5rem]">ถัดไป</button>
+      <button id="nextBtn" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded">
+        ถัดไป
+      </button>
     </div>
-
   </div>
 </main>
 
-<!-- Modal แจ้งเตือนสำหรับคนไม่ใช่ MAX -->
+<!-- Modal -->
 <div id="modal-root"></div>
 
 <script>
-  const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+/* ----------------  config & util  ---------------- */
+const API    = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+const params = new URLSearchParams(location.search);
+const chapId = params.get("id");
 
-  // ตรวจสอบ MAX จาก localStorage
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-  const isMAX = !!user?.lineId;
+const user   = JSON.parse(localStorage.getItem("user") || "null");
+const isMAX  = !!user?.lineId;
 
-  // รับ chapId จาก query string
-  const params = new URLSearchParams(location.search);
-  const chapId = params.get("id");
-  if (!chapId) {
-    alert("ไม่พบรหัสบทเรียน");
-    location.href = "snack.html";
+/* ---------- modal helper ---------- */
+function openModal(html){
+  const root = document.getElementById("modal-root");
+  root.innerHTML =
+    `<div id="mask" class="fixed inset-0 bg-black/50 z-[90] flex items-center justify-center">
+       <div class="bg-white rounded-xl shadow-xl p-6 max-w-md w-full text-center">
+         ${html}
+         <button onclick="closeModal()"
+                 class="mt-6 px-6 py-2 bg-gray-300 rounded hover:bg-gray-400">ปิด</button>
+       </div>
+     </div>`;
+  document.getElementById("mask").onclick = e=>{
+    if(e.target.id==="mask") closeModal();
+  };
+}
+function closeModal(){ document.getElementById("modal-root").innerHTML=""; }
+
+/* ---------- guard ---------- */
+if(!chapId){
+   alert("ไม่พบรหัสบท"); location.href="snack.html";
+}
+if(!isMAX){
+   openModal(`<h2 class="text-xl font-bold text-purple-700 mb-4">สำหรับสมาชิก MAX เท่านั้น</h2>
+              <p>กรุณาสมัคร MAX เพื่อเข้าเรียนบทเต็ม</p>`);
+}
+
+/* ---------- load slides ---------- */
+let slides=[], idx=0;
+
+(async()=>{
+  try{
+    const j = await fetch(`${API}?action=get_full_slides&id=${chapId}`).then(r=>r.json());
+    if(j.status!=="success"||!j.slides.length) throw "no slides";
+    slides = j.slides;
+    idx    = 0;
+    render();
+  }catch(err){
+    alert("ไม่พบเนื้อหาบทเรียน"); location.href="snack.html";
   }
+})();
 
-  // Modal helper
-  function openModal(html) {
-    const root = document.getElementById("modal-root");
-    root.innerHTML = `
-      <div id="mask" class="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 text-center">
-          ${html}
-          <button onclick="closeModal()" class="mt-6 px-6 py-2 bg-gray-300 rounded hover:bg-gray-400">ปิด</button>
-        </div>
-      </div>`;
-    document.getElementById("mask").onclick = e => {
-      if (e.target.id === "mask") root.innerHTML = "";
-    };
-  }
-  function closeModal() {
-    document.getElementById("modal-root").innerHTML = "";
-  }
+/* ---------- render slide ---------- */
+function render(){
+  const s = slides[idx];
+  const html = `
+    <h2 class="text-purple-700 font-bold">สไลด์ ${idx+1}/${slides.length}</h2>
+    ${s.img ? `<img src="${s.img}" class="mx-auto max-h-56 object-contain mb-4">` : ""}
+    <p class="text-gray-700 whitespace-pre-wrap text-left">${s.text || ""}</p>`;
 
-  // ถ้าไม่ใช่ MAX ให้แสดง modal แจ้งเตือน
-  if (!isMAX) {
-    openModal(`<h2 class="text-xl font-bold mb-4 text-purple-700">ฟีเจอร์นี้สำหรับสมาชิก MAX เท่านั้น</h2>
-               <p>กรุณาสมัคร MAX เพื่อใช้งานบทเรียนแบบเต็ม</p>`);
-  }
+  document.getElementById("slideArea").innerHTML = html;
 
-  // โหลดสไลด์ full content
-  let slides = [], idx = 0;
-  async function loadSlides() {
-    try {
-      const res = await fetch(`${API}?action=get_full_slides&id=${chapId}`);
-      const data = await res.json();
-      if (data.status !== "success" || !data.slides.length) {
-        alert("ไม่พบเนื้อหาบทเรียน");
-        location.href = "snack.html";
-        return;
-      }
-      slides = data.slides;
-      idx = 0;
-      renderSlide();
-    } catch (e) {
-      alert("เกิดข้อผิดพลาดในการโหลดข้อมูล");
-      console.error(e);
-      location.href = "snack.html";
-    }
-  }
+  document.getElementById("prevBtn").disabled = idx===0;
+  document.getElementById("nextBtn").disabled = idx===slides.length-1;
+}
 
-  function renderSlide() {
-    const s = slides[idx];
-    const slideArea = document.getElementById("slideArea");
-    slideArea.innerHTML = `
-      <h2 class="text-purple-700 font-bold">สไลด์ ${idx + 1} / ${slides.length}</h2>
-      ${s.img ? <img src="${s.img}" class="mx-auto max-h-56 object-contain mb-4" alt="รูปประกอบสไลด์"> : ""}
-      <p class="text-gray-700 whitespace-pre-wrap text-left">${s.text}</p>
-    `;
-
-    // ปุ่มย้อน-ถัดไป
-    document.getElementById("prevBtn").disabled = idx === 0;
-    document.getElementById("prevBtn").classList.toggle("opacity-40", idx === 0);
-
-    document.getElementById("nextBtn").disabled = idx === slides.length - 1;
-    document.getElementById("nextBtn").classList.toggle("opacity-40", idx === slides.length - 1);
-  }
-
-  // ปุ่มย้อนกลับ
-  document.getElementById("prevBtn").addEventListener("click", () => {
-    if (idx > 0) {
-      idx--;
-      renderSlide();
-    }
-  });
-
-  // ปุ่มถัดไป
-  document.getElementById("nextBtn").addEventListener("click", () => {
-    if (idx < slides.length - 1) {
-      idx++;
-      renderSlide();
-    }
-  });
-
-  // ปุ่มทำ Quiz
-  document.getElementById("quizBtn").addEventListener("click", () => {
-    if (!isMAX) {
-      alert("ฟีเจอร์นี้สำหรับสมาชิก MAX เท่านั้น");
-      return;
-    }
-    location.href = `quiz.html?id=${chapId}&mode=full`;
-  });
-
-  // โหลดสไลด์ตอนเริ่ม
-  loadSlides();
-
+/* ---------- controls ---------- */
+document.getElementById("prevBtn").onclick = ()=>{ if(idx>0){ idx--; render(); } };
+document.getElementById("nextBtn").onclick = ()=>{ if(idx<slides.length-1){ idx++; render(); } };
+document.getElementById("quizBtn").onclick = ()=>{
+  if(!isMAX) return alert("สำหรับ MAX เท่านั้น");
+  location.href = `quiz.html?id=${chapId}&mode=full`;
+};
 </script>
-
 </body>
 </html>
