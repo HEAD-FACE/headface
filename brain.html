@@ -167,7 +167,7 @@ document.getElementById("box-full").onclick = async ()=>{
 /*                เลือกบท (ใช้ได้ทั้งสองโหมด)                  */
 /* ------------------------------------------------------------- */
 async function chooseChapter(subj,mode){
-  const j = await fetch(`${API}?action=list_${mode}_chapters&subj=${subj}`).then(r=>r.json());
+  const j = await fetch(`${API}?action=list_snack_chapters&subj=${subj}`).then(r=>r.json());
   if(j.status!=="success") return alert("error");
 
   const html = j.chapters.map(c=>`
