@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>บทเรียน – HEAD FACE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex items-center justify-center">
+
+  <div id="box" class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4">
+    <!-- สไลด์จะเติมตรงนี้ -->
+  </div>
+
+  <script>
+  /* ---------- config ---------- */
+  const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+
+  /* ---------- อ่าน query id=ST001 ---------- */
+  const params = new URLSearchParams(location.search);
+  const chapId = params.get("id");
+  if (!chapId) { alert("ไม่พบรหัสบท"); history.back(); }
+
+  /* ---------- ดึงสไลด์ ---------- */
+  fetch(`${API}?action=get_snack_slides&id=`+chapId)
+    .then(r=>r.json())
+    .then(showSlides)
+    .catch(()=>alert("โหลดบทเรียนไม่สำเร็จ"));
+
+  /* ---------- เรนเดอร์ & นำทาง ---------- */
+  function showSlides(j){
+    if (j.status!=="success"||!j.slides.length){
+      alert("ไม่พบสไลด์"); history.back(); return;
+    }
+    let idx=0; render();
+
+    function render(){
+      const s = j.slides[idx];
+      const box = document.getElementById("box");
+      box.innerHTML = `
+          <h2 class="text-center text-blue-700 font-bold mb-3">
+            สไลด์ ${idx+1}/${j.slides.length}
+          </h2>
+          ${s.img ? `<img src="${s.img}" class="mx-auto mb-3 max-h-52 object-contain">` : ""}
+          <p class="text-gray-700 whitespace-pre-wrap mb-4">${s.text}</p>
+          <div class="flex justify-between">
+            <button id="backBtn"  class="px-4 py-1 bg-gray-200 rounded
+                    ${idx?"" : "opacity-30 cursor-default"}"
+                    ${idx?"" : "disabled"}>ย้อน</button>
+            <button id="nextBtn"  class="px-4 py-1 bg-blue-600 text-white rounded">
+              ${idx===j.slides.length-1 ? "ไป Quiz" : "ถัดไป"}
+            </button>
+          </div>`;
+      document.getElementById("backBtn")?.addEventListener("click",()=>{idx--;render();});
+      document.getElementById("nextBtn").addEventListener("click",()=>{
+         if(idx<j.slides.length-1){idx++;render();}
+         else{ alert("ต่อไปจะเข้าหน้า Quiz (ยังไม่ทำ)"); }
+      });
+    }
+  }
+  </script>
+</body>
+</html>
