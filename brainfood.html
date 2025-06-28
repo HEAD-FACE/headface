@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Brain Food – HEAD FACE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen">
+
+<!-- Header -->
+<header class="bg-white shadow py-3 px-6 flex justify-between items-center">
+  <h1 class="text-xl font-bold text-blue-700">Brain Food</h1>
+  <a href="home.html" class="text-sm text-blue-600 underline">← กลับหน้า Home</a>
+</header>
+
+<!-- Dashboard -->
+<section id="dash" class="max-w-4xl mx-auto mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+  <div class="bg-white/70 backdrop-blur rounded-xl p-4 text-center">
+    <p class="text-sm text-gray-600">บทที่เรียนแล้ว</p>
+    <h2 id="ds-lesson" class="text-2xl font-bold text-blue-600">0</h2>
+  </div>
+  <div class="bg-white/70 backdrop-blur rounded-xl p-4 text-center">
+    <p class="text-sm text-gray-600">ควิซที่ทำ</p>
+    <h2 id="ds-quiz"   class="text-2xl font-bold text-blue-600">0</h2>
+  </div>
+</section>
+
+<!-- 3 Cards -->
+<section class="max-w-5xl mx-auto mt-10 grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
+  <!-- Snack -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+    <h3 class="text-lg font-bold text-indigo-700 mb-2">Snack Set</h3>
+    <p class="text-gray-600 flex-grow">สรุปสั้น + Quiz 5 ข้อ</p>
+    <button onclick="openSnack()" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl">
+      เริ่มเลย
+    </button>
+  </div>
+
+  <!-- Full meal -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+    <h3 class="text-lg font-bold text-purple-700 mb-2">Full Meal</h3>
+    <p class="text-gray-600 flex-grow">บทเรียนเต็ม + Quiz 15 ข้อ<br>(เฉพาะ MAX)</p>
+    <button id="btn-full" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl">
+      เริ่มเลย
+    </button>
+  </div>
+
+  <!-- Salad -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col">
+    <h3 class="text-lg font-bold text-green-700 mb-2">Salad Set</h3>
+    <p class="text-gray-600 flex-grow">Quiz ผสม 20 ข้อ / วิชา</p>
+    <button onclick="openSalad()" class="mt-4 bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl">
+      เริ่มเลย
+    </button>
+  </div>
+</section>
+
+<!-- Modal : MAX Only -->
+<div id="max-only" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-xl p-6 text-center max-w-xs w-full" onclick="event.stopPropagation()">
+    <h4 class="text-xl font-bold text-red-600 mb-4">เฉพาะ MAX</h4>
+    <p class="text-gray-600 mb-6">ฟีเจอร์นี้สำหรับผู้ใช้งาน MAX เท่านั้น</p>
+    <button onclick="closeMax()" class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-6 rounded-xl">
+      ตกลง
+    </button>
+  </div>
+</div>
+
+<script>
+/* ───────── 1. ตัวแปรผู้ใช้ & MAX ───────── */
+const user   = JSON.parse(localStorage.getItem("user") || "{}");
+const isMax  = !!user.lineId;          // มี lineId = MAX
+
+/* ───────── 2. Dashboard : ดึงคอลัมน์ K (บท Quiz) ───────── */
+(async () => {
+  try {
+    if (!user.lineId) return;         // ยังไม่ login
+    const url   = `https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec?action=get_progress&id=${user.lineId}`;
+    const res   = await fetch(url);
+    const data  = await res.json();
+    if (data.status === "success") {
+      const [lessCnt, quizCnt] = data.progress.split(" ").map(Number);
+      document.getElementById("ds-lesson").textContent = lessCnt;
+      document.getElementById("ds-quiz").textContent   = quizCnt;
+    }
+  } catch(err){ console.error(err); }
+})();
+
+/* ───────── 3. ปุ่มเปิดแต่ละเซ็ต ───────── */
+function openSnack(){  window.location.href = "snack.html"; }
+function openSalad(){  window.location.href = "salad.html"; }
+
+document.getElementById("btn-full").addEventListener("click", () => {
+  if (isMax){
+    window.location.href = "fullmeal.html";
+  }else{
+    document.getElementById("max-only").classList.remove("hidden");
+  }
+});
+function closeMax(){
+  document.getElementById("max-only").classList.add("hidden");
+}
+document.getElementById("max-only").addEventListener("click", closeMax);
+</script>
+</body>
+</html>
