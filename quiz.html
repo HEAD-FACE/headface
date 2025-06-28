@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz – Brain Food | HEAD FACE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* shake เมื่อเลือกผิด */
+    @keyframes shake{10%,90%{transform:translateX(-2px)}
+    20%,80%{transform:translateX(4px)}
+    30%,50%,70%{transform:translateX(-8px)}
+    40%,60%{transform:translateX(8px)}
+    } .shake{animation:shake .6s cubic-bezier(.36,.07,.19,.97) both}
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
+  <h1 class="text-lg md:text-xl font-bold text-blue-700">
+     แบบทดสอบ&nbsp;<span id="chapter"></span>
+  </h1>
+  <a href="snack.html"
+     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
+     กลับ Snack
+  </a>
+</header>
+
+<!-- Content -->
+<main class="flex-1 flex items-center justify-center p-4">
+  <div id="box"
+       class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6
+              transition-all min-h-[24rem] flex flex-col justify-center space-y-6 text-center">
+    <!-- เนื้อหา Quiz จะเติมด้วย JS -->
+    <p class="text-blue-600">กำลังโหลดแบบทดสอบ…</p>
+  </div>
+</main>
+
+<script>
+/* ───────── CONFIG & PARAM ───────── */
+const API     = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+const params  = new URLSearchParams(location.search);
+const chapId  = params.get("id");
+const level   = params.get("level") || "easy";
+const user    = JSON.parse(localStorage.getItem("user")||"null");
+const isMAX   = !!user?.lineId;
+document.getElementById("chapter").textContent = chapId ?? "";
+
+/* ───────── โหลด Quiz จาก GAS ───────── */
+let quiz = [], idx = 0, score = 0, wrong = [];
+(async()=>{
+  if(!chapId){ alert("ไม่พบรหัสบท"); location.href="snack.html"; return; }
+
+  const j = await fetch(`${API}?action=get_snack_quiz&id=${chapId}&level=${level}`)
+                 .then(r=>r.json())
+                 .catch(()=>({status:"error"}));
+
+  if(j.status!=="success" || !j.quiz?.length){
+      alert("ไม่พบแบบทดสอบ"); location.href="snack.html"; return;
+  }
+  quiz = j.quiz;
+  render();
+})();
+
+/* ───────── เรนเดอร์คำถาม ───────── */
+function render(){
+  const q = quiz[idx];
+  document.getElementById("box").innerHTML = `
+     <h2 class="text-blue-700 font-bold mb-2">ข้อ ${(idx+1)} / ${quiz.length}</h2>
+     ${q.image?`<img src="${q.image}" class="mx-auto max-h-56 object-contain mb-3">`:""}
+     <p class="mb-4 text-left">${q.question}</p>
+     <div id="choiceBox" class="space-y-2">
+       ${q.choice.map((c,i)=>`
+         <button data-i="${i}"
+           class="w-full text-left px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200">
+           ${String.fromCharCode(0x0E01+i)}. ${c}
+         </button>`).join("")}
+     </div>`;
+  // bind click
+  document.querySelectorAll("#choiceBox button").forEach(b=>b.onclick = selectChoice);
+}
+
+/* ───────── เมื่อเลือกคำตอบ ───────── */
+function selectChoice(e){
+  const sel = +e.currentTarget.dataset.i;
+  const q   = quiz[idx];
+  const box = document.getElementById("choiceBox");
+
+  // ปิดคลิกซ้ำ
+  box.querySelectorAll("button").forEach(b=>b.disabled=true);
+
+  const ok  = sel===+q.answer;
+  if(ok){
+     e.currentTarget.classList.add("bg-green-500","text-white","animate-pulse","duration-700");
+     score++;
+  }else{
+     e.currentTarget.classList.add("bg-red-500","text-white","shake");
+     box.children[q.answer].classList.add("bg-green-500","text-white");
+     if(isMAX) wrong.push({...q, sel});
+  }
+
+  setTimeout(()=>{
+    idx++;
+    if(idx<quiz.length) render();
+    else showSummary();
+  }, 1100);
+}
+
+/* ───────── สรุปผล ───────── */
+function showSummary(){
+  const percent = Math.round(score/quiz.length*100);
+  document.getElementById("box").innerHTML = `
+    <h2 class="text-2xl font-bold mb-4">คะแนน ${score} / ${quiz.length} (${percent}%)</h2>
+    ${isMAX&&wrong.length?reviewHTML():""}
+    <a href="snack.html"
+       class="inline-block mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl">
+       กลับ Brain Food
+    </a>`;
+}
+
+/* ───────── HTML Review สำหรับ MAX ───────── */
+function reviewHTML(){
+  return `
+    <h3 class="font-semibold text-blue-700 mb-2">ข้อที่ผิด (กดดูสไลด์)</h3>
+    <ul class="text-left mb-4">
+      ${wrong.map(w=>`
+        <li class="mb-1">
+          ❌ <a class="underline text-blue-600 hover:text-blue-800"
+                href="lesson.html?id=${chapId}#slide${w.slide}" target="_blank">
+              ${w.question.slice(0,45)}…
+            </a>
+        </li>`).join("")}
+    </ul>`;
+}
+</script>
+</body>
+</html>
