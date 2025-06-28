@@ -2,119 +2,127 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Brain Food – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen">
 
-  <!-- ­­────────  Header  ──────── -->
-  <header class="bg-white shadow-md py-4 px-6 flex justify-between items-center">
-    <div class="flex items-center gap-2">
-      <a href="home.html" class="text-xl font-bold text-blue-700">HEAD FACE</a>
+<!-- Header -->
+<header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
+  <h1 class="text-xl font-bold text-blue-700">Brain Food</h1>
+  <a href="home.html"
+     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
+     กลับหน้า หลัก
+  </a>
+</header>
+
+<!-- Dashboard -->
+<section class="max-w-3xl mx-auto mt-6 grid grid-cols-2 gap-4">
+  <div class="bg-white/80 rounded-xl p-4 text-center shadow">
+    <p class="text-gray-500">บทที่เรียน</p>
+    <p id="stat-lesson" class="text-2xl font-bold text-blue-700">0</p>
+  </div>
+  <div class="bg-white/80 rounded-xl p-4 text-center shadow">
+    <p class="text-gray-500">Quiz ที่ทำ</p>
+    <p id="stat-quiz" class="text-2xl font-bold text-blue-700">0</p>
+  </div>
+</section>
+
+<!-- Menu boxes -->
+<section class="max-w-4xl mx-auto mt-10 grid md:grid-cols-3 gap-6 px-4">
+
+  <!-- Snack -->
+  <div id="box-snack" class="group relative cursor-pointer">
+    <div
+      class="bg-gradient-to-r from-green-400 to-lime-500 rounded-2xl h-40 flex items-center justify-center shadow-lg
+             group-hover:scale-105 transition">
+      <span class="text-white text-xl font-bold">Snack Set</span>
     </div>
-    <nav class="space-x-2">
-      <!-- ใส่ปุ่มหรือเมนูอื่น ๆ ได้ -->
-      <a href="home.html"  class="text-blue-600 hover:underline">หน้าหลัก</a>
-      <a href="brain.html" class="font-semibold px-4 py-1 rounded-xl bg-indigo-600 text-white">Brain Food</a>
-    </nav>
-  </header>
+    <p class="mt-2 text-center text-sm text-gray-700">
+      สรุปสั้น กระชับ + Quiz 5 ข้อ
+    </p>
+  </div>
 
-  <!-- ­­────────  Container  ──────── -->
-  <main class="max-w-4xl mx-auto mt-8 p-4">
+  <!-- Full -->
+  <div id="box-full" class="group relative cursor-pointer">
+    <div
+      class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl h-40 flex items-center justify-center shadow-lg
+             group-hover:scale-105 transition">
+      <span class="text-white text-xl font-bold">Full Meal</span>
+    </div>
+    <p class="mt-2 text-center text-sm text-gray-700">
+      บทเรียนเต็ม + Quiz 15 ข้อ (เฉพาะ MAX)
+    </p>
 
-    <!-- Dashboard -->
-    <section id="dashboard" class="bg-white rounded-xl p-4 shadow mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-around gap-2">
-      <p class="text-blue-700 font-semibold">📘 เรียนรู้แล้ว : <span id="lesson-count">0</span> บท</p>
-      <p class="text-purple-700 font-semibold">🧠 ทำควิซแล้ว : <span id="quiz-count">0</span> ข้อ</p>
-    </section>
-
-    <!-- เมนูหลัก -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-      <!-- Snack Set -->
-      <div class="bg-white shadow-lg p-6 rounded-xl border-l-4 border-yellow-400 flex flex-col">
-        <h2 class="text-xl font-bold text-yellow-600 mb-1">🥪 Snack Set</h2>
-        <p class="text-gray-600 mb-4 flex-grow">สรุปบทเรียนกระชับ + ควิซ 5 ข้อ</p>
-        <a href="snack.html"
-           class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded text-center">
-          เริ่มเลย
-        </a>
-      </div>
-
-      <!-- Full Meal (เฉพาะ MAX) -->
-      <div class="bg-white shadow-lg p-6 rounded-xl border-l-4 border-red-400 flex flex-col">
-        <h2 class="text-xl font-bold text-red-600 mb-1">🍛 Full Meal</h2>
-        <p class="text-gray-600 mb-4 flex-grow">บทเรียนจัดเต็ม + ควิซ 15 ข้อ (เฉพาะ MAX)</p>
-        <button onclick="checkMAXAccess('fullmeal.html')"
-                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
-          เริ่มเลย
-        </button>
-      </div>
-
-      <!-- Salad Set -->
-      <div class="bg-white shadow-lg p-6 rounded-xl border-l-4 border-green-400 flex flex-col">
-        <h2 class="text-xl font-bold text-green-600 mb-1">🥗 Salad Set</h2>
-        <p class="text-gray-600 mb-4 flex-grow">รวมทุกบท – ควิซ 20 ข้อ</p>
-        <a href="salad.html"
-           class="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-center">
-          เริ่มเลย
-        </a>
-      </div>
-
-    </section>
-  </main>
-
-  <!-- ­­────────  Modal (เฉพาะ MAX)  ──────── -->
-  <div id="upgrade-modal"
-       class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center"
-         onclick="event.stopPropagation()">
-      <h2 class="text-xl font-bold text-blue-800 mb-4">เฉพาะผู้ใช้ MAX</h2>
-      <p class="text-gray-600 mb-6">ฟีเจอร์ Full Meal ใช้ได้เฉพาะผู้สมัคร MAX เท่านั้น</p>
-      <a href="setting.html"
-         class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-xl">
-        ดูวิธีอัปเกรด
-      </a>
-      <button id="close-upgrade"
-              class="w-full text-sm text-gray-500 hover:text-gray-700 mt-4">
-        ปิด
-      </button>
+    <!-- Overlay lock -->
+    <div id="lock-full"
+         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur flex flex-col items-center justify-center text-center text-purple-600 font-semibold hidden">
+      <p>เฉพาะ MAX</p>
     </div>
   </div>
 
-  <!-- ­­────────  Script  ──────── -->
-  <script>
-    // โหลดข้อมูล user จาก LocalStorage
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+  <!-- Salad -->
+  <div id="box-salad" class="group relative cursor-pointer">
+    <div
+      class="bg-gradient-to-r from-teal-400 to-cyan-500 rounded-2xl h-40 flex items-center justify-center shadow-lg
+             group-hover:scale-105 transition">
+      <span class="text-white text-xl font-bold">Salad Set</span>
+    </div>
+    <p class="mt-2 text-center text-sm text-gray-700">
+      Quiz รวม ทุกบท (20 ข้อ)
+    </p>
 
-    /* ===== Dashboard ===== */
-    (() => {
-      // ถ้าใน LocalStorage มีสถิติเก็บไว้ user.brainStats = "บทเรียน ควิซ"
-      const stats = (user.brainStats || "0 0").split(" ");
-      document.getElementById("lesson-count").textContent = stats[0] || "0";
-      document.getElementById("quiz-count").textContent   = stats[1] || "0";
-    })();
+    <div id="lock-salad"
+         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur flex flex-col items-center justify-center text-center text-cyan-700 font-semibold hidden">
+      <p>เฉพาะ MAX</p>
+    </div>
+  </div>
 
-    /* ===== ตรวจ MAX ===== */
-    function checkMAXAccess(link) {
-      if (!user.lineId) {
-        // ยังไม่ใช่ MAX
-        document.getElementById("upgrade-modal").classList.remove("hidden");
-        return;
-      }
-      // เป็น MAX → ไปหน้า full meal
-      window.location.href = link;
+</section>
+
+<!-- Modal placeholder / ภายหลังจะใช้เลือกวิชา etc. -->
+<div id="modal-root"></div>
+
+<script>
+  /* ─────────   user & MAX check   ───────── */
+  const user   = JSON.parse(localStorage.getItem("user") || "null");
+  const isMAX  = !!user?.lineId;     // มี lineId = สมัคร MAX
+
+  // ล็อกกล่องเฉพาะ MAX
+  if (!isMAX) {
+    document.getElementById("lock-full").classList.remove("hidden");
+    document.getElementById("lock-salad").classList.remove("hidden");
+  }
+
+  /* ─────────   dashboard stats   ───────── */
+  async function loadStats() {
+    if (!user) return;
+    const res  = await fetch(
+      `https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec?action=get_brain_stats&no=${user.no}`
+    );
+    const data = await res.json();
+    if (data.status === "success") {
+      const [lesson, quiz] = data.count.split(" ");
+      document.getElementById("stat-lesson").textContent = lesson;
+      document.getElementById("stat-quiz").textContent   = quiz;
     }
+  }
+  loadStats();
 
-    // ปิดโมดัล
-    document.getElementById("upgrade-modal")
-            .addEventListener("click", () =>
-              document.getElementById("upgrade-modal").classList.add("hidden"));
-    document.getElementById("close-upgrade")
-            .addEventListener("click", () =>
-              document.getElementById("upgrade-modal").classList.add("hidden"));
-  </script>
+  /* ─────────   click-handlers (เฉพาะ Step 1)   ───────── */
+  document.getElementById("box-snack").onclick = () =>
+    alert("Snack Set – ขั้นถัดไปจะให้เลือกวิชา ✨");
+
+  document.getElementById("box-full").onclick = () => {
+    if (isMAX) alert("Full Meal – เฉพาะ MAX (จะเลือกวิชาได้ใน Step ต่อไป)");
+  };
+
+  document.getElementById("box-salad").onclick = () => {
+    if (isMAX) alert("Salad Set – จะเลือกวิชาได้ใน Step ต่อไป");
+    else       alert("ฟีเจอร์นี้สำหรับ MAX เท่านั้น");
+  };
+</script>
 </body>
 </html>
