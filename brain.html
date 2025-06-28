@@ -135,11 +135,11 @@ document.getElementById("box-snack").onclick = async ()=>{
   openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-4">เลือกวิชา</h3>${list}`);
 
   document.querySelectorAll(".sn-sub").forEach(btn=>{
-     btn.onclick=()=> chooseChapter(btn.dataset.subj);
+     btn.onclick=()=> chooseChapter_snack(btn.dataset.subj);
   });
 };
 
-async function chooseChapter(subj){
+async function chooseChapter_snack(subj){
   const j = await fetch(`${API}?action=list_snack_chapters&subj=${subj}`).then(r=>r.json());
   if(j.status!=="success") return alert("error");
 
@@ -156,6 +156,23 @@ async function chooseChapter(subj){
   });
 }
 
+  async function chooseChapter_full(subj){
+  const j = await fetch(`${API}?action=list_snack_chapters&subj=${subj}`).then(r=>r.json());
+  if(j.status!=="success") return alert("error");
+
+  const list = j.chapters.map(c=>
+     `<button class="sn-chap block w-full text-left bg-gray-100 hover:bg-gray-200
+                   rounded-xl px-4 py-2 my-1" data-chap="${c.id}">
+        ${c.title}
+      </button>`
+  ).join("");
+  openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-4">เลือกบท – ${subj}</h3>${list}`);
+
+  document.querySelectorAll(".sn-chap").forEach(btn=>{
+     btn.onclick = ()=> location.href = `full.html?id=${btn.dataset.chap}`; // ⇦ เปลี่ยนหน้า
+  });
+}
+  
 /* --- Full & Salad (เดิม) --- */
 document.getElementById("box-full").onclick = document.getElementById("box-snack").onclick = async ()=>{
   const j = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
@@ -168,7 +185,7 @@ document.getElementById("box-full").onclick = document.getElementById("box-snack
   openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-4">เลือกวิชา</h3>${list}`);
 
   document.querySelectorAll(".sn-sub").forEach(btn=>{
-     btn.onclick=()=> chooseChapter(btn.dataset.subj);
+     btn.onclick=()=> chooseChapter_full(btn.dataset.subj);
   });
 };
   
