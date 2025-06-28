@@ -76,7 +76,7 @@ const isMax  = !!user.lineId;          // มี lineId = MAX
 (async () => {
   try {
     if (!user.lineId) return;         // ยังไม่ login
-    const url   = `https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec?action=get_progress&id=${user.lineId}`;
+    const url   = `https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec?action=get_progress&id=${user.no}`;
     const res   = await fetch(url);
     const data  = await res.json();
     if (data.status === "success") {
