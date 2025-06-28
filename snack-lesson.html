@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lesson Slide – Brain Food</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-50 min-h-screen flex flex-col items-center">
+
+<header class="text-center p-4 text-xl font-bold text-blue-800">บทเรียน – Snack Set</header>
+
+<div class="w-full max-w-xl bg-white rounded-xl shadow-md p-4 text-center">
+  <img id="img" class="rounded-xl max-h-[320px] mx-auto mb-4" src="" alt="">
+  <p id="content" class="text-gray-700"></p>
+
+  <div class="mt-6 flex justify-between items-center">
+    <button onclick="goToFull()" class="text-purple-700 underline text-sm">Full Meal</button>
+    <button onclick="goToQuiz()" class="bg-green-600 text-white py-1 px-4 rounded-xl">ไปทำ Quiz</button>
+    <button onclick="nextSlide()" class="bg-blue-600 text-white py-1 px-4 rounded-xl">ถัดไป</button>
+  </div>
+</div>
+
+<script>
+const lesson = JSON.parse(localStorage.getItem("currentLesson"));
+const isMax  = !!JSON.parse(localStorage.getItem("user") || "{}").lineId;
+let current  = 1;
+
+function loadSlide(){
+  fetch(`https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec?action=get_slide&id=${lesson.id}&no=${current}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "success"){
+        document.getElementById("img").src = data.slide.img;
+        document.getElementById("content").textContent = data.slide.full || "ไม่มีเนื้อหา";
+      } else {
+        alert("หมดสไลด์แล้ว!");
+      }
+    });
+}
+
+function nextSlide(){ current++; loadSlide(); }
+function goToQuiz(){ window.location.href = "snack-quiz.html"; }
+function goToFull(){
+  if (!isMax) return alert("เฉพาะ MAX เท่านั้น!");
+  // หรือ redirect ไป fullmeal.html พร้อมบทนี้
+}
+
+loadSlide();
+</script>
+
+</body>
+</html>
