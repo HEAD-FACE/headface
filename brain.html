@@ -157,9 +157,21 @@ async function chooseChapter(subj){
 }
 
 /* --- Full & Salad (เดิม) --- */
-document.getElementById("box-full").onclick = ()=>{
-  if(isMAX) alert("Full Meal – (อยู่ระหว่างพัฒนา)");
+document.getElementById("box-full").onclick = document.getElementById("box-snack").onclick = async ()=>{
+  const j = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
+  if(j.status!=="success") return alert("โหลดวิชาไม่สำเร็จ");
+
+  const list = j.subjects.map(s=>
+     `<button class="sn-sub bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-xl m-1"
+              data-subj="${s.code}">${s.name}</button>`
+  ).join("");
+  openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-4">เลือกวิชา</h3>${list}`);
+
+  document.querySelectorAll(".sn-sub").forEach(btn=>{
+     btn.onclick=()=> chooseChapter(btn.dataset.subj);
+  });
 };
+  
 document.getElementById("box-salad").onclick = ()=>{
   if(isMAX) alert("Salad Set – (อยู่ระหว่างพัฒนา)");
   else      alert("ฟีเจอร์นี้สำหรับ MAX เท่านั้น");
