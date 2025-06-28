@@ -91,7 +91,7 @@ function render(){
   const s = slides[idx];
   document.getElementById("slideArea").innerHTML = `
     <h2 class="text-purple-700 font-bold">สไลด์ ${idx+1}/${slides.length}</h2>
-    ${s.img ? <img src="${s.img}" class="mx-auto max-h-56 object-contain mb-4"> : ""}
+    ${s.img ? '<img src="${s.img}" class="mx-auto max-h-56 object-contain mb-4">' : ""}
     <p class="text-gray-700 whitespace-pre-wrap text-left">${s.text||""}</p>`;
 
   prevBtn.disabled = idx===0;  prevBtn.classList.toggle("opacity-40", idx===0);
