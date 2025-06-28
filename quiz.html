@@ -22,9 +22,9 @@
   <h1 class="text-lg md:text-xl font-bold text-blue-700">
      แบบทดสอบ&nbsp;<span id="chapter"></span>
   </h1>
-  <a href="snack.html"
+  <a href="brain.html"
      class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
-     กลับ Snack
+     กลับหน้าแรก
   </a>
 </header>
 
@@ -114,10 +114,11 @@ function showSummary(){
   document.getElementById("box").innerHTML = `
     <h2 class="text-2xl font-bold mb-4">คะแนน ${score} / ${quiz.length} (${percent}%)</h2>
     ${isMAX&&wrong.length?reviewHTML():""}
-    <a href="snack.html"
+    <a href="brain.html"
        class="inline-block mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl">
-       กลับ Brain Food
-    </a>`;
+       กลับหน้าแรก
+    </a>
+    `;
 }
 
 /* ───────── HTML Review สำหรับ MAX ───────── */
