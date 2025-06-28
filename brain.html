@@ -84,7 +84,45 @@
 
 <!-- Modal placeholder / ภายหลังจะใช้เลือกวิชา etc. -->
 <div id="modal-root"></div>
+
 <script>
+  /* ─────────   user & MAX check   ───────── */
+  const user   = JSON.parse(localStorage.getItem("user") || "null");
+  const isMAX  = !!user?.lineId;     // มี lineId = สมัคร MAX
+
+  // ล็อกกล่องเฉพาะ MAX
+  if (!isMAX) {
+    document.getElementById("lock-full").classList.remove("hidden");
+    document.getElementById("lock-salad").classList.remove("hidden");
+  }
+
+  /* ─────────   dashboard stats   ───────── */
+  async function loadStats() {
+    if (!user) return;
+    const res  = await fetch(
+      `https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec?action=get_brain_stats&no=${user.no}`
+    );
+    const data = await res.json();
+    if (data.status === "success") {
+      const [lesson, quiz] = data.count.split(" ");
+      document.getElementById("stat-lesson").textContent = lesson;
+      document.getElementById("stat-quiz").textContent   = quiz;
+    }
+  }
+  loadStats();
+
+
+  document.getElementById("box-full").onclick = () => {
+    if (isMAX) alert("Full Meal – เฉพาะ MAX (จะเลือกวิชาได้ใน Step ต่อไป)");
+  };
+
+  document.getElementById("box-salad").onclick = () => {
+    if (isMAX) alert("Salad Set – จะเลือกวิชาได้ใน Step ต่อไป");
+    else       alert("ฟีเจอร์นี้สำหรับ MAX เท่านั้น");
+  };
+</script>
+
+  <script>
 const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
 
 /* ── Modal utils ─────────────────────────────── */
@@ -169,42 +207,6 @@ async function showSlides(chapId){
     });
   }
 }
-</script>
-<script>
-  /* ─────────   user & MAX check   ───────── */
-  const user   = JSON.parse(localStorage.getItem("user") || "null");
-  const isMAX  = !!user?.lineId;     // มี lineId = สมัคร MAX
-
-  // ล็อกกล่องเฉพาะ MAX
-  if (!isMAX) {
-    document.getElementById("lock-full").classList.remove("hidden");
-    document.getElementById("lock-salad").classList.remove("hidden");
-  }
-
-  /* ─────────   dashboard stats   ───────── */
-  async function loadStats() {
-    if (!user) return;
-    const res  = await fetch(
-      `https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec?action=get_brain_stats&no=${user.no}`
-    );
-    const data = await res.json();
-    if (data.status === "success") {
-      const [lesson, quiz] = data.count.split(" ");
-      document.getElementById("stat-lesson").textContent = lesson;
-      document.getElementById("stat-quiz").textContent   = quiz;
-    }
-  }
-  loadStats();
-
-
-  document.getElementById("box-full").onclick = () => {
-    if (isMAX) alert("Full Meal – เฉพาะ MAX (จะเลือกวิชาได้ใน Step ต่อไป)");
-  };
-
-  document.getElementById("box-salad").onclick = () => {
-    if (isMAX) alert("Salad Set – จะเลือกวิชาได้ใน Step ต่อไป");
-    else       alert("ฟีเจอร์นี้สำหรับ MAX เท่านั้น");
-  };
 </script>
 </body>
 </html>
