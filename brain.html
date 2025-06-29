@@ -94,11 +94,6 @@ const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgx
 const user  = JSON.parse(localStorage.getItem("user") || "null");
 const isMAX = !!user?.lineId;
 
-if(!isMAX){
-  document.getElementById("lock-full").classList.remove("hidden");
-  document.getElementById("lock-salad").classList.remove("hidden");
-}
-
 /* ---------- DASHBOARD ---------- */
 (async()=>{
   if(!user) return;
@@ -189,6 +184,10 @@ async function chooseChapter(subj,mode){
      };
   });
 }
+
+  document.getElementById("box-salad").oneclick = () =>{
+    location.href = ""salad.html";
+  };
 </script>
 </body>
 </html>
