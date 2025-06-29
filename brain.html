@@ -1,6 +1,29 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+  <style>
+    /* ซ่อน scrollbar ทุก Browser ที่รองรับ */
+.no-scrollbar::-webkit-scrollbar{display:none}
+.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none }
+
+/* Pop แอนิเมชันตอนแลก */
+@keyframes pop{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.25)}
+  100%{transform:scale(1)}
+}
+.pop{animation:pop .6s ease-in-out}
+
+/* confetti (จุดสีเล็ก ๆ) */
+.confetti{
+  position:absolute; width:6px; height:6px;
+  border-radius:50%; pointer-events:none;
+  animation:fall 700ms ease-out forwards;
+}
+@keyframes fall{
+  to{ transform:translateY(60px) rotate(720deg); opacity:0 }
+}
+  </style>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Brain Food – HEAD FACE</title>
@@ -28,6 +51,41 @@
     <p class="text-gray-500">Quiz ที่ทำ</p>
     <p id="stat-quiz" class="text-2xl font-bold text-blue-700">0</p>
   </div>
+</section>
+
+  <!-- Brain-Food Pass (เลื่อนได้) -->
+<section id="bf-pass" class="max-w-4xl mx-auto mt-8 px-4">
+  <h2 class="font-bold text-blue-800 mb-3">Brain-Food Pass</h2>
+
+  <div class="relative">
+
+    <!-- ปุ่มเลื่อน -->
+    <button id="bf-left"
+            class="absolute left-0 top-1/2 -translate-y-1/2 z-10
+                   bg-white/80 hover:bg-white shadow px-2 py-1 rounded-full">
+      ‹
+    </button>
+
+    <!-- เส้น + reward -->
+    <div id="bf-scroll"
+         class="overflow-x-auto scroll-smooth no-scrollbar px-8">
+      <div id="bf-track"
+           class="flex gap-14 items-center py-3 w-max relative">
+        <!-- item จะเติมด้วย JS -->
+        <div class="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 bg-gray-300 rounded-full -z-10"></div>
+      </div>
+    </div>
+
+    <button id="bf-right"
+            class="absolute right-0 top-1/2 -translate-y-1/2 z-10
+                   bg-white/80 hover:bg-white shadow px-2 py-1 rounded-full">
+      ›
+    </button>
+  </div>
+
+  <p class="text-right text-sm mt-1 text-gray-600">
+    แต้มของคุณ: <span id="bf-point" class="font-bold">0</span>
+  </p>
 </section>
 
 <!-- ───────────── Set Boxes ───────────── -->
@@ -188,6 +246,87 @@ async function chooseChapter(subj,mode){
   document.getElementById("box-salad").onclick = () =>{
     location.href = `salad.html`;
   };
+
+  /* ----- ดึงและแสดง ----- */
+(async()=>{
+  if(!user) return;
+  const j = await fetch(`${API}?action=get_rewards&no=${user.no}`).then(r=>r.json());
+  if(j.status!=="success") return;
+
+  document.getElementById("bf-point").textContent = j.point;
+  const track = document.getElementById("bf-track");
+
+  track.innerHTML = j.rewards.map(rw=>{
+
+     const cls = rw.status==="used"   ? "opacity-25"
+              : rw.status==="claimed"? "ring-4 ring-green-400"
+              : j.point>=rw.need     ? "animate-pulse"
+              : "grayscale";
+     const btn  = rw.status==="locked"  ? "locked"
+               : rw.status==="claimed" ? "use"
+               : "claim";
+
+     return`
+     <div class="flex flex-col items-center w-20 relative">
+       <img src="${rw.img}" class="w-14 h-14 rounded-full ${cls} reward" data-id="${rw.id}">
+       <button class="mt-1 text-[11px] px-2 py-[2px] rounded
+                      ${btn==="locked" ? "bg-gray-300 text-gray-500 cursor-default"
+                                       : btn==="claim" ? "bg-green-500 text-white hover:bg-green-600"
+                                                       : "bg-indigo-500 text-white hover:bg-indigo-600"}
+                      bf-btn" data-id="${rw.id}" data-state="${btn}">
+         ${btn==="locked"?"แลก":"ใช้"}
+       </button>
+     </div>`}).join("");
+
+  /* scroll btn */
+  const scrollBox = document.getElementById("bf-scroll");
+  document.getElementById("bf-left").onclick  = ()=>scrollBox.scrollBy({left:-200,behavior:"smooth"});
+  document.getElementById("bf-right").onclick = ()=>scrollBox.scrollBy({left: 200,behavior:"smooth"});
+
+  /* click reward btn */
+  document.querySelectorAll(".bf-btn").forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id   = btn.dataset.id;
+      const st   = btn.dataset.state;
+      if(st==="locked") return;
+
+      if(st==="claim"){
+         const r = await fetch(`${API}?action=claim_reward&id=${id}&no=${user.no}`).then(r=>r.json());
+         if(r.status!=="success") return alert("แลกไม่สำเร็จ");
+         animateReward(id,"claim");          // 🎉
+         btn.textContent="ใช้";
+         btn.dataset.state="use";
+         btn.classList.replace("bg-green-500","bg-indigo-500");
+      }else{ // use
+         if(!confirm("ใช้รางวัลนี้?")) return;
+         const r = await fetch(`${API}?action=use_reward&id=${id}&no=${user.no}`).then(r=>r.json());
+         if(r.status!=="success") return alert("ใช้ไม่สำเร็จ");
+         animateReward(id,"use");
+         btn.textContent="ใช้แล้ว";
+         btn.dataset.state="used";
+         btn.classList.add("opacity-25");
+      }
+    };
+  });
+
+  /* ===== helper animation ===== */
+  function animateReward(id,type){
+     const img = track.querySelector(`img[data-id="${id}"]`);
+     img.classList.add("pop");
+     setTimeout(()=>img.classList.remove("pop"),600);
+
+     // โปรย confetti
+     for(let i=0;i<25;i++){
+       const cf = document.createElement("div");
+       cf.className="confetti";
+       cf.style.left = (img.offsetLeft+28 + (Math.random()*30-15))+"px";
+       cf.style.top  = (img.offsetTop-20)+"px";
+       cf.style.background = `hsl(${Math.random()*360},80%,60%)`;
+       track.appendChild(cf);
+       setTimeout(()=>cf.remove(),700);
+     }
+  }
+})();
 </script>
 </body>
 </html>
