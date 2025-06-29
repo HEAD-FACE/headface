@@ -6,8 +6,10 @@
   <title>Salad Set – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gradient-to-br from-teal-100 to-cyan-200 min-h-screen flex flex-col">
 
+<!-- ──────  Header  ────── -->
 <header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
   <h1 class="text-lg md:text-xl font-bold text-cyan-700">Salad Set – Quiz รวมหลายบท</h1>
   <a href="brain.html"
@@ -16,16 +18,18 @@
   </a>
 </header>
 
-<!-- ① เลือกวิชา -->
+<!-- ────── ① เลือกวิชา ────── -->
 <section id="stepSubject" class="flex-1 flex flex-col items-center justify-center p-6">
   <h2 class="text-xl font-bold mb-4 text-cyan-800">เลือกวิชา</h2>
   <div id="subjBox" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
 </section>
 
-<!-- ② เลือกบท (checkbox) -->
+<!-- ────── ② เลือกบท ────── -->
 <section id="stepChapter" class="hidden flex-1 flex flex-col items-center justify-center p-6">
   <h2 class="text-xl font-bold mb-4 text-cyan-800">เลือกบท (เลือกได้หลายบท)</h2>
-  <form id="chapForm" class="max-h-80 w-full max-w-md overflow-y-auto p-2 border rounded bg-white"></form>
+  <form id="chapForm"
+        class="max-h-80 w-full max-w-md overflow-y-auto p-3 border rounded bg-white/60 backdrop-blur"></form>
+
   <button id="startQuiz"
           class="mt-4 bg-cyan-600 hover:bg-cyan-700 text-white px-8 py-2 rounded-xl disabled:opacity-40"
           disabled>
@@ -34,54 +38,86 @@
 </section>
 
 <script>
-const API  = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
-const user = JSON.parse(localStorage.getItem("user")||"null");
+/* ---------- CONSTANTS ---------- */
+const API   = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+const user  = JSON.parse(localStorage.getItem("user")||"null");
+const isMAX = !!user?.lineId;
 
-if(!user){ alert("กรุณาเข้าสู่ระบบ"); location.href="index.html"; }
+if(!user){
+  alert("กรุณาเข้าสู่ระบบ"); location.href="index.html";
+}
 
-/* ----------  step 1 : รายชื่อวิชา (reuse endpoint เดิม) ---------- */
+/* ---------- STEP 1 : LOAD SUBJECTS ---------- */
 (async()=>{
-  const j = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
-  if(j.status!=="success") return alert("โหลดวิชาไม่สำเร็จ");
+  /* 1. รายชื่อวิชา (รี-use endpoint snack) */
+  const subjRes  = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
+  if(subjRes.status!=="success"){ alert("โหลดวิชาล้มเหลว"); return; }
 
-  document.getElementById("subjBox").innerHTML =
-    j.subjects.map(s=>`
-      <button data-code="${s.code}"
-              class="subj w-full px-4 py-6 bg-white/70 hover:bg-white rounded-xl shadow text-cyan-700 font-semibold">
-        ${s.name}
-      </button>`).join("");
+  /* 2. ดึง “วิชาที่ทำแล้ววันนี้” (เฉพาะ non-MAX) */
+  let doneToday = [];
+  if(!isMAX){
+    const d = await fetch(`${API}?action=list_salad_done&no=${user.no}`)
+                     .then(r=>r.json()).catch(()=>({status:"err"}));
+    if(d.status==="success") doneToday = d.list;   // เช่น ["ST","MT"]
+  }
 
-  document.querySelectorAll(".subj").forEach(btn=>{
+  /* 3. สร้างปุ่มวิชา */
+  const html = subjRes.subjects.map(s=>{
+     const locked = !isMAX && doneToday.includes(s.code);  // เทา / คลิกไม่ได้
+     return `
+        <button data-code="${s.code}"
+                ${locked ? "disabled" : ""}
+                class="subj w-full px-4 py-5 rounded-xl shadow text-center
+                       font-semibold transition
+                       ${locked
+                          ? "bg-gray-300 text-gray-400 cursor-not-allowed"
+                          : "bg-white/70 hover:bg-white text-cyan-700"}">
+          ${s.name}
+          ${locked ? '<div class="text-[0.7rem]">(ทำแล้ววันนี้)</div>' : ""}
+        </button>`;
+  }).join("");
+
+  document.getElementById("subjBox").innerHTML = html;
+
+  /* 4. bind click */
+  document.querySelectorAll(".subj:not([disabled])").forEach(btn=>{
      btn.onclick = ()=> loadChapters(btn.dataset.code);
   });
 })();
 
-/* ----------  step 2 : รายชื่อบท ---------- */
-async function loadChapters(subj){
-   document.getElementById("stepSubject").classList.add("hidden");
-   document.getElementById("stepChapter").classList.remove("hidden");
+/* ---------- STEP 2 : CHAPTER LIST ---------- */
+async function loadChapters(subjCode){
+  /* สลับหน้าจอ */
+  document.getElementById("stepSubject").classList.add("hidden");
+  document.getElementById("stepChapter").classList.remove("hidden");
 
-   const j = await fetch(`${API}?action=list_salad_chapters&subj=${subj}`).then(r=>r.json());
-   if(j.status!=="success") return alert("error");
+  const j = await fetch(`${API}?action=list_salad_chapters&subj=${subjCode}`).then(r=>r.json());
+  if(j.status!=="success"){ alert("โหลดบทล้มเหลว"); return; }
 
-   const form = document.getElementById("chapForm");
-   form.innerHTML = j.chapters.map(c=>`
-      <label class="flex items-center gap-2 mb-2">
-        <input type="checkbox" name="chap" value="${c.id}" class="accent-cyan-600">
+  const checkboxes = j.chapters.map(c=>`
+      <label class="flex items-center gap-3 mb-2">
+        <input type="checkbox" name="chap" value="${c.id}" class="accent-cyan-600 scale-110">
         <span>${c.title}</span>
       </label>`).join("");
 
-   /* เปิดปุ่ม “เริ่ม” เมื่อมีเลือกอย่างน้อย 1 บท */
-   form.onchange = ()=>{
-      const any = form.querySelectorAll("input:checked").length>0;
-      startBtn.disabled = !any;
-   };
-   window.__subj = subj;   // keep
+  const form = document.getElementById("chapForm");
+  form.innerHTML = checkboxes;
+
+  /* เปิดปุ่มเมื่อเลือกอย่างน้อย 1 บท */
+  form.onchange = ()=>{
+     const any = form.querySelectorAll("input:checked").length>0;
+     document.getElementById("startQuiz").disabled = !any;
+  };
+
+  window.__saladSubj = subjCode;   // เก็บไว้ใช้ตอนกดเริ่ม
 }
-const startBtn = document.getElementById("startQuiz");
-startBtn.onclick = ()=>{
-   const chaps = [...document.querySelectorAll("#chapForm input:checked")].map(i=>i.value);
-   location.href = `quiz.html?mode=salad&subj=${__subj}&chap=${chaps.join(",")}`;
+
+/* ---------- START QUIZ ---------- */
+document.getElementById("startQuiz").onclick = ()=>{
+  const ids = [...document.querySelectorAll("#chapForm input:checked")].map(i=>i.value);
+  if(ids.length===0) return;
+  /* 20 ข้อ – คงกำหนดฝั่ง GAS */
+  location.href = `quiz.html?mode=salad&subj=${__saladSubj}&chap=${ids.join(",")}`;
 };
 </script>
 </body>
