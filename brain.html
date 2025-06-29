@@ -283,12 +283,12 @@ function renderPass(rewards, point){
   bfTrack.querySelectorAll('.bf-item').forEach(e=>e.remove());
 
   rewards.sort((a,b)=>a.need - b.need).forEach(r=>{
-    const hasPointEnough = point >= r.need;
+    const hasPointEnough = Number(point) >= Number(r.need);
     const state = r.status; // locked | claim | claimed | used
 
     // ถ้าแต้มไม่พอ ให้สถานะเป็น locked (รอแต้ม)
     const finalState = !hasPointEnough ? 'locked' : state;
-
+      
     const canClaim = (finalState === 'claim');
     const btnTxt = finalState === 'locked' ? 'รอแต้ม' :
                    finalState === 'claim' ? 'แลก' :
