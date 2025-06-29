@@ -248,4 +248,22 @@ document.getElementById("bf-right").onclick= ()=>scrollEl.scrollBy({left: 220,be
 
 /* === Snack / Full / Salad Navigation ============================== */
 /* (โค้ดชุดเดิม — ตัดข้อความเพื่อย่อ  แต่ยังทำงานเหมือนที่คุณมี)    */
-document.getElementById("box-snack").oncli
+document.getElementById("box-snack").onclick = async ()=>{
+  const r = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
+  if(r.status!=="success") return alert("โหลดวิชาไม่สำเร็จ");
+  openModal(r.subjects.map(s=>`<button class="sub bg-blue-100 hover:bg-blue-200 m-1 px-4 py-2 rounded"
+               data-id="${s.code}">${s.name}</button>`).join(""));
+  document.querySelectorAll(".sub").forEach(b=>{
+     b.onclick=()=>location.href=`snack.html?subj=${b.dataset.id}`;
+  });
+};
+
+document.getElementById("box-full").onclick = ()=>{
+  if(!isMAX){ alert("ฟีเจอร์นี้เฉพาะ MAX"); return; }
+  location.href="snack.html?mode=full";   /* คุณเลือกเปลี่ยนปลายทางภายหลังได้ */
+};
+
+document.getElementById("box-salad").onclick = ()=>location.href="salad.html";
+</script>
+</body>
+</html>
