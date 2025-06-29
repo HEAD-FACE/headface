@@ -5,6 +5,34 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Brain Food – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* scrollbar hide for pass track */
+    #bf-scroll.no-scrollbar::-webkit-scrollbar { display: none; }
+    #bf-scroll.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    /* pop animation */
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+    .pop {
+      animation: pop 0.5s ease-in-out;
+    }
+    /* confetti */
+    .confetti {
+      position: absolute;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: fall 0.7s ease-out forwards;
+    }
+    @keyframes fall {
+      to {
+        transform: translateY(60px) rotate(720deg);
+        opacity: 0;
+      }
+    }
+  </style>
 </head>
 
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen">
@@ -27,6 +55,30 @@
   <div class="bg-white/80 rounded-xl p-4 text-center shadow">
     <p class="text-gray-500">Quiz ที่ทำ</p>
     <p id="stat-quiz" class="text-2xl font-bold text-blue-700">0</p>
+  </div>
+</section>
+
+<!-- ───────────── Brain-Food Pass (เพิ่มส่วนนี้) ───────────── -->
+<section class="max-w-5xl mx-auto mt-10 px-6">
+  <div class="flex items-center justify-between mb-2">
+    <h2 class="font-bold text-blue-800 text-lg">Brain-Food Pass</h2>
+    <p class="text-sm text-gray-600">แต้มของคุณ: <span id="bf-point" class="font-bold">0</span></p>
+  </div>
+
+  <div class="relative">
+    <button id="bf-left"
+            class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/70 hover:bg-white
+                   shadow p-1 rounded-full">‹</button>
+    <button id="bf-right"
+            class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/70 hover:bg-white
+                   shadow p-1 rounded-full">›</button>
+
+    <div id="bf-scroll" class="overflow-x-auto no-scrollbar scroll-smooth px-8">
+      <div id="bf-track" class="relative flex gap-14 items-center py-4 w-max">
+        <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-gray-300 rounded-full -z-10"></div>
+        <!-- รายการ pass จะใส่ด้วย JS -->
+      </div>
+    </div>
   </div>
 </section>
 
@@ -85,7 +137,6 @@
 <!-- Modal root -->
 <div id="modal-root"></div>
 
-<!-- ───────────── Script ───────────── -->
 <script>
 /* ---------- CONFIG ---------- */
 const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
@@ -185,9 +236,106 @@ async function chooseChapter(subj,mode){
   });
 }
 
-  document.getElementById("box-salad").onclick = () =>{
-    location.href = `salad.html`;
-  };
+document.getElementById("box-salad").onclick = () =>{
+  location.href = `salad.html`;
+};
+
+/* ---------- Brain-Food Pass system ---------- */
+const bfPointEl = document.getElementById('bf-point');
+const bfTrack   = document.getElementById('bf-track');
+const bfScroll  = document.getElementById('bf-scroll');
+const bfLeftBtn = document.getElementById('bf-left');
+const bfRightBtn= document.getElementById('bf-right');
+
+bfLeftBtn.onclick = () => bfScroll.scrollBy({left: -300, behavior: 'smooth'});
+bfRightBtn.onclick= () => bfScroll.scrollBy({left: 300, behavior: 'smooth'});
+
+function animatePop(id){
+  const img = bfTrack.querySelector(`img[data-id="${id}"]`);
+  if(!img) return;
+  img.classList.add('pop');
+  setTimeout(() => img.classList.remove('pop'), 500);
+  const rect = img.getBoundingClientRect();
+  for(let i=0; i<25; i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = rect.left + rect.width/2 + (Math.random()*40-20) + 'px';
+    c.style.top  = rect.top + 'px';
+    c.style.background = `hsl(${Math.random()*360},80%,60%)`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 700);
+  }
+}
+
+async function loadPass(){
+  if(!user) return;
+  try {
+    const res = await fetch(`${API}?action=list_rewards&no=${user.no}`);
+    const j = await res.json();
+    if(j.status === 'success'){
+      renderPass(j.rewards, j.point);
+    }
+  } catch(e) { console.log("loadPass error", e); }
+}
+
+function renderPass(rewards, point){
+  bfPointEl.textContent = point;
+  bfTrack.querySelectorAll('.bf-item').forEach(e=>e.remove());
+  rewards.sort((a,b)=>a.need - b.need).forEach(r=>{
+    const state = r.status; // locked | claim | claimed | used
+    const canClaim = (state === 'claim');
+    const btnTxt = state === 'locked' ? 'รอแต้ม' :
+                   state === 'claim' ? 'แลก' :
+                   state === 'claimed' ? 'ใช้' : 'ใช้แล้ว';
+    const btnCls = state === 'locked' ? 'bg-gray-300 cursor-not-allowed' :
+                   state === 'claim' ? 'bg-green-600 hover:bg-green-700 text-white' :
+                   state === 'claimed' ? 'bg-orange-600 hover:bg-orange-700 text-white' :
+                   'bg-gray-400 cursor-not-allowed text-white';
+    const imgOpacity = (state === 'used') ? 'opacity-30 grayscale border-gray-400' :
+                      (state === 'claimed') ? 'border-green-400' :
+                      (canClaim) ? 'border-yellow-400 animate-pulse' : 'border-gray-300 grayscale';
+    const div = document.createElement('div');
+    div.className = 'bf-item flex flex-col items-center space-y-1';
+    div.innerHTML = `
+      <img src="${r.img}" data-id="${r.id}"
+           class="w-20 h-20 rounded-full border-4 ${imgOpacity}">
+      <p class="text-xs font-semibold text-center w-20 truncate">${r.title}</p>
+      <button ${state==='used'?'disabled':''}
+              class="bf-btn text-xs px-3 py-0.5 rounded ${btnCls}"
+              data-id="${r.id}" data-state="${state}">${btnTxt}</button>
+    `;
+    bfTrack.appendChild(div);
+  });
+
+  bfTrack.querySelectorAll('.bf-btn').forEach(btn=>{
+    if(btn.disabled) return;
+    btn.onclick = async ()=>{
+      const id = btn.dataset.id;
+      const state = btn.dataset.state;
+      const action = state==='claim' ? 'claim_reward' : 'use_reward';
+      const msg = state==='claim' ? 'ยืนยันแลกรางวัลนี้?' : 'ใช้รางวัลนี้ตอนนี้หรือไม่?';
+      if(!confirm(msg)) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API}?action=${action}&no=${user.no}&id=${id}`);
+        const j = await res.json();
+        if(j.status==='success'){
+          animatePop(id);
+          await loadPass();
+        } else {
+          alert('ดำเนินการไม่สำเร็จ');
+          btn.disabled = false;
+        }
+      } catch {
+        alert('network error');
+        btn.disabled = false;
+      }
+    };
+  });
+}
+
+loadPass();
+
 </script>
 </body>
 </html>
