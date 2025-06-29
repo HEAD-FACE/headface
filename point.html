@@ -5,19 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>แต้มสะสม | ระบบของคุณ</title>
 
-  <!-- Tailwind (ใช้เฉพาะตัวโหลด / utility เล็ก ๆ) -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- ฟอนต์ + ธีมเดิม -->
+  <!-- ฟอนต์ + ธีม -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap');
     :root{
-      --color-primary:#1e40af;
-      --color-secondary:#3b82f6;
-      --color-bg:#f0f5ff;
-      --color-text:#1e293b;
-      --color-card-bg:#ffffff;
-      --shadow:rgba(30,64,175,.15)
+      --color-primary:#1e40af;--color-bg:#f0f5ff;--color-text:#1e293b;
+      --color-card-bg:#fff;--shadow:rgba(30,64,175,.15)
     }
     *{box-sizing:border-box}
     body{
@@ -27,8 +23,9 @@
     }
     .container{
       max-width:600px;width:100%;background:var(--color-card-bg);
-      border-radius:20px;padding:30px 25px;box-shadow:0 12px 24px var(--shadow);
-      display:flex;flex-direction:column;transition:filter .3s
+      border-radius:20px;padding:30px 25px;
+      box-shadow:0 12px 24px var(--shadow);display:flex;flex-direction:column;
+      transition:filter .3s
     }
     h1{margin:0 0 24px;text-align:center;color:var(--color-primary);font-size:1.9rem}
     .userinfo{display:grid;grid-template-columns:1fr 1fr;gap:18px 30px;font-weight:500;font-size:1.1rem;margin-bottom:30px}
@@ -38,30 +35,24 @@
     .btn-view-redeemed{background:#1e40af;color:#fff;font-weight:600;border:none;border-radius:12px;padding:12px;margin-bottom:20px;
       cursor:pointer;font-size:1rem;width:100%;transition:background .3s}
     .btn-view-redeemed:hover{background:#172554}
-    .reward-card{background:#f8fbff;border-radius:16px;padding:15px;box-shadow:0 4px 12px rgba(0,100,255,.1);margin-bottom:15px;overflow:hidden;transition:box-shadow .3s}
+    .reward-card{background:#f8fbff;border-radius:16px;padding:15px;box-shadow:0 4px 12px rgba(0,100,255,.1);margin-bottom:15px;overflow:hidden}
     .reward-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
     .reward-title{font-weight:700;color:#1e3a8a;font-size:1.1rem}
     .reward-meta{font-size:.95rem;color:#475569;margin-top:4px}
-    .reward-detail{max-height:0;overflow:hidden;transition:max-height .4s,padding .4s;padding-top:0}
-    .reward-card.open .reward-detail{max-height:200px;padding-top:12px}
+    .reward-detail{max-height:0;overflow:hidden;transition:max-height .4s,padding .4s}
+    .reward-card.open .reward-detail{max-height:220px;padding-top:12px}
     .btn-redeem{background:var(--color-primary);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-weight:bold;cursor:pointer;margin-top:10px}
     .btn-redeem:disabled{background:#ccc;cursor:not-allowed}
     .points-label{font-size:1rem;font-weight:500;opacity:.85;margin-top:10px;letter-spacing:1px}
   </style>
 </head>
 <body>
-  <!-- LOADER OVERLAY -->
-  <div id="loader"
-       class="hidden fixed inset-0 z-50 flex items-center justify-center bg-white/40 backdrop-blur-sm">
-    <!-- วงกลมหมุนสีฟ้า -->
-    <svg class="animate-spin h-16 w-16 text-blue-600"
-         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor"
-            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-    </svg>
+  <!-- LOADING OVERLAY -->
+  <div id="loader" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-white/80 backdrop-blur-sm">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
   </div>
 
+  <!-- MAIN CARD -->
   <div id="main" class="container">
     <h1>ข้อมูลส่วนตัว (BETA 2)</h1>
 
@@ -84,30 +75,46 @@
     <div id="reward-list"></div>
   </div>
 
+  <!-- SCRIPT -->
   <script>
     const GAS_URL='https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec';
     const loader=document.getElementById('loader');
     const main=document.getElementById('main');
+    /* -------- loader helpers -------- */
+    let loadCount=0;
+    const showLoader=()=>{if(++loadCount===1){loader.classList.remove('hidden');main.classList.add('blur-sm')}};
+    const hideLoader=()=>{if(--loadCount<=0){loadCount=0;loader.classList.add('hidden');main.classList.remove('blur-sm')}};
 
-    /* ---------- util ---------- */
-    const showLoader=(()=>{let cnt=0;return()=>{if(++cnt===1){loader.classList.remove('hidden');main.classList.add('blur-sm')}}})();
-    const hideLoader=(()=>{let cnt=0;return()=>{if(--cnt<=0){cnt=0;loader.classList.add('hidden');main.classList.remove('blur-sm')}}})();
-    function animatePoints(from,to,duration=1200){
+    /* -------- utils -------- */
+    /**
+     * แต้มวิ่งสุ่มช้า ~2.8 วิ เปลี่ยนเลขทุก 70 ms
+     */
+    function animatePoints(from,to,duration=2800,step=70){
       const el=document.getElementById('user-points');
       const start=performance.now();
-      const rand=()=>Math.floor(Math.random()*Math.abs(to-from))+Math.min(from,to);
+      let nextSwap=start;
+
+      const ease=t=>t<.5?2*t*t:-1+(4-2*t)*t;   // easeInOutQuad
+
       const tick=now=>{
-        const progress=Math.min((now-start)/duration,1);
-        const eased=progress<.5?2*progress*progress:-1+(4-2*progress)*progress; // ease-in-out quad
-        const current=Math.floor(from+(to-from)*eased);
-        el.textContent=progress<1?rand():to;
-        if(progress<1)requestAnimationFrame(tick);
-        else el.textContent=to;
+        const prog=Math.min((now-start)/duration,1);
+        const cur=Math.floor(from+(to-from)*ease(prog));
+
+        if(now>=nextSwap && prog<1){
+          el.textContent=Math.floor(Math.random()*(to-from)+from);
+          nextSwap=now+step;
+        }
+
+        if(prog<1){
+          requestAnimationFrame(tick);
+        }else{
+          el.textContent=to;
+        }
       };
       requestAnimationFrame(tick);
     }
 
-    /* ---------- local ---------- */
+    /* -------- local data -------- */
     function loadUserData(){
       const userStr=localStorage.getItem('user');
       if(!userStr){alert('กรุณาล็อกอินก่อน');return null;}
@@ -119,14 +126,16 @@
       return u;
     }
 
-    /* ---------- fetch ---------- */
+    /* -------- fetch -------- */
     async function fetchUserPoints(no){
       try{
         showLoader();
         const res=await fetch(`${GAS_URL}?action=getUserPoints&no=${no}`);
         const data=await res.json();
         return data.points;
-      }catch(e){console.error(e);return 0;}finally{hideLoader();}
+      }catch(e){
+        console.error(e);return 0;
+      }finally{hideLoader();}
     }
     async function fetchRewards(points,no){
       try{
@@ -138,6 +147,7 @@
           const hasClaimed=r.claimedList.includes(String(no));
           const canRedeem=!hasClaimed&&(r.quantity==='U'||Number(r.quantity)>r.claimedList.length);
           const enough=points>=Number(r.price);
+
           const card=document.createElement('div');card.className='reward-card';
           const header=document.createElement('div');header.className='reward-header';header.innerHTML=`
             <div>
@@ -147,18 +157,19 @@
             <div>▼</div>`;
           const detail=document.createElement('div');detail.className='reward-detail';
           detail.innerHTML=`<div>${r.desc}</div>`;
-          const btn=document.createElement('button');
-          btn.className='btn-redeem';btn.textContent=hasClaimed?'แลกแล้ว':'แลกรางวัล';
-          btn.disabled=!canRedeem||!enough;
+          const btn=document.createElement('button');btn.className='btn-redeem';
+          btn.textContent=hasClaimed?'แลกแล้ว':'แลกรางวัล';btn.disabled=!canRedeem||!enough;
           btn.onclick=()=>redeemReward(r.id,points,no,btn);
-          detail.appendChild(btn);header.addEventListener('click',()=>card.classList.toggle('open'));
+          detail.appendChild(btn);
+
+          header.addEventListener('click',()=>card.classList.toggle('open'));
           card.append(header,detail);list.appendChild(card);
-        })
-      }catch(e){console.error(e)}
+        });
+      }catch(e){console.error(e);}
       finally{hideLoader();}
     }
 
-    /* ---------- redeem ---------- */
+    /* -------- redeem -------- */
     async function redeemReward(rewardId,points,userNo,btn){
       if(!confirm('คุณต้องการแลกรางวัลนี้ใช่หรือไม่?'))return;
       try{
@@ -167,18 +178,19 @@
         const result=await res.json();
         if(result.success){
           alert('แลกรางวัลสำเร็จ!');
-          animatePoints(Number(document.getElementById('user-points').textContent),result.newPoints);
+          const current=parseInt(document.getElementById('user-points').textContent);
+          animatePoints(current,result.newPoints);
           btn.textContent='แลกแล้ว';btn.disabled=true;
-        }else alert(`แลกไม่สำเร็จ: ${result.message}`);
+        }else alert('แลกไม่สำเร็จ: '+result.message);
       }catch(e){console.error(e);alert('เกิดข้อผิดพลาดในการแลกรางวัล');}
       finally{hideLoader();}
     }
 
-    /* ---------- start ---------- */
+    /* -------- start -------- */
     window.addEventListener('load',async()=>{
       const user=loadUserData();if(!user)return;
       const points=await fetchUserPoints(user.no);
-      animatePoints(0,points);
+      animatePoints(0,points);           // เริ่มวิ่งช้า ๆ
       await fetchRewards(points,user.no);
     });
   </script>
