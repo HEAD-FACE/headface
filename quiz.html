@@ -147,7 +147,7 @@ function shuffle(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.r
 
   function showSummary(){
   const percent = Math.round(score/quiz.length*100);
-  const bonus   = Math.floor(percent/10);               // 80→8 …
+  const bonus   =  percent >= 80 ? Math.floor(percent/10) : 0;               // 80→8 …
 
   document.getElementById("box").innerHTML = `
      <h2 class="text-2xl font-bold mb-2">คุณทำได้ ${score}/${quiz.length} คะแนน</h2>
