@@ -61,7 +61,11 @@
 <script>
 /* -------- ตั้งค่าพื้นฐาน -------- */
 const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
-
+const user = JSON.parse(localStorage.getItem("user") || "null");
+  if (!user) {
+    alert("กรุณาเข้าสู่ระบบใหม่");
+    location.href = "index.html";
+      }
 const LEVELS = [
   {code:"easy",   name:"🍬 Candy Pop (Easy)"           , color:"from-green-400 to-lime-500"},
   {code:"medium", name:"🍫 Choco Bite (Medium)"        , color:"from-yellow-400 to-orange-500"},
