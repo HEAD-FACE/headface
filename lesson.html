@@ -115,6 +115,13 @@ function render(){
   prevBtn.classList.toggle("opacity-30", idx===0);
   nextBtn.disabled = idx===slides.length-1;
   nextBtn.classList.toggle("opacity-30", idx===slides.length-1);
+
+  /* เมื่อมาถึงสไลด์สุดท้ายและยังไม่ได้บันทึก */
+  if(idx === slides.length-1 && !window.__sentLesson){
+     window.__sentLesson = true;           // กันส่งซ้ำ
+     fetch(`${API}?action=update_progress&type=lesson&no=${user.no}`)
+        .catch(()=>{});
+  }
 }
 
 /* -------- ปุ่มควบคุม -------- */
