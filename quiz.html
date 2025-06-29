@@ -57,7 +57,7 @@ let quiz = [], idx = 0, score = 0, wrong = [];
       const chaps = params.get("chap");
       url = `${API}?action=get_salad_quiz&subj=${subj}&chaps=${chaps}`;
       
-} else if (mode === "snack){
+} else if (mode === "snack"){
   url = `${API}?action=get_snack_quiz&id=${chapId}&level=${level}`;
   
 } else if (mode  === "full") {
