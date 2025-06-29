@@ -54,7 +54,7 @@ let quiz = [], idx = 0, score = 0, wrong = [];
   let url="";
   if (mode === "salad"){
       const subj = params.get("subj");
-      const chaps = params.get("chap");
+      const chaps = params.get("id");
       url = `${API}?action=get_salad_quiz&subj=${subj}&chaps=${chaps}`;
       
 } else if (mode === "snack"){
