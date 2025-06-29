@@ -51,19 +51,20 @@ document.getElementById("chapter").textContent = chapId ?? "";
 let quiz = [], idx = 0, score = 0, wrong = [];
 (async()=>{
   if(!chapId){ alert("ไม่พบรหัสบท"); location.href="snack.html"; return; }
+  let url="";
   if (mode === "salad"){
       const subj = params.get("subj");
       const chaps = params.get("chap");
-      const url = `${API}?action=get_salad_quiz&subj=${subj}&chaps=${chaps}`;
-      const j   = await fetch(url).then(r=>r.json()).catch(()=>({status:"error"}));
-} else{
-  // เลือก action ให้ตรงโหมด
-  const action = (mode==="full") ? "get_full_quiz" : "get_snack_quiz";
-
-  const url = `${API}?action=${action}&id=${chapId}&level=${level}`;
-  const j   = await fetch(url).then(r=>r.json()).catch(()=>({status:"error"}));
+      url = `${API}?action=get_salad_quiz&subj=${subj}&chaps=${chaps}`;
+      
+} else if (mode === "snack){
+  url = `${API}?action=get_snack_quiz&id=${chapId}&level=${level}`;
+  
+} else if (mode  === "full") {
+  url = `${API}?action=get_full_quiz&id=${chapId}&level=${level}`;
 }
-
+  
+const j   = await fetch(url).then(r=>r.json()).catch(()=>({status:"error"}));
   if(j.status!=="success" || !j.quiz?.length){
       alert("ไม่พบแบบทดสอบ"); location.href="snack.html"; return;
   }
