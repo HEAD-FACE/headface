@@ -278,70 +278,80 @@ async function loadPass(){
   } catch(e) { console.log("loadPass error", e); }
 }
 
-function renderPass(rewards, point){
-  bfPointEl.textContent = point;
-  bfTrack.querySelectorAll('.bf-item').forEach(e=>e.remove());
+/* ---------- renderPass (ใหม่) ---------- */
+function renderPass(rawRewards, point){
+  const track = document.getElementById("bf-track");
+  track.innerHTML = "";                    // เคลียร์ของเก่า
 
-  rewards.sort((a,b)=>a.need - b.need).forEach(r=>{
-    const hasPointEnough = Number(point) >= Number(r.need);
-    const state = r.status; // locked | claim | claimed | used
+  /* 1) เรียงแต้มต่ำ → สูง */
+  const rewards = [...rawRewards].sort((a,b)=> Number(a.need)-Number(b.need));
 
-    // ถ้าแต้มไม่พอ ให้สถานะเป็น locked (รอแต้ม)
-    const finalState = !hasPointEnough ? 'locked' : state;
-      
-    const canClaim = (finalState === 'claim');
-    const btnTxt = finalState === 'locked' ? 'รอแต้ม' :
-                   finalState === 'claim' ? 'แลก' :
-                   finalState === 'claimed' ? 'ใช้' : 'ใช้แล้ว';
+  /* 2) วาด UI */
+  rewards.forEach(r => {
+    /* 2-1) ตัดสิน state */
+    const need    = Number(r.need)||0;
+    const myPoint = Number(point)||0;
 
-    const btnCls = finalState === 'locked' ? 'bg-gray-300 cursor-not-allowed' :
-                   finalState === 'claim' ? 'bg-green-600 hover:bg-green-700 text-white' :
-                   finalState === 'claimed' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
-                   'bg-gray-400 cursor-not-allowed text-white';
+    let state = r.status;                  // locked | claimed | used
+    if(state==="locked" && myPoint >= need) state="claim";
 
-    const imgOpacity = (finalState === 'used') ? 'opacity-30 grayscale border-gray-400' :
-                      (finalState === 'claimed') ? 'border-blue-400' :
-                      (canClaim) ? 'border-yellow-400 animate-pulse' : 'border-gray-300 grayscale';
+    /* 2-2) กำหนดคลาส/ปุ่ม */
+    const cls =
+          state==="used"    ? "opacity-30"
+        : state==="claim"   ? "hover:scale-105 animate-pulse"
+        : state==="claimed" ? "ring-4 ring-green-400"
+        :                     "grayscale";
 
-    const div = document.createElement('div');
-    div.className = 'bf-item flex flex-col items-center space-y-1';
-    div.innerHTML = `
-      <img src="${r.img}" data-id="${r.id}"
-           class="w-20 h-20 rounded-full border-4 ${imgOpacity}">
-      <p class="text-xs font-semibold text-center w-20 truncate">${r.title}</p>
-      <p class="text-xs text-gray-500">ต้องใช้ ${r.need} แต้ม</p>
-      <button ${finalState==='used'?'disabled':''}
-              class="bf-btn text-xs px-3 py-0.5 rounded ${btnCls}"
-              data-id="${r.id}" data-state="${finalState}">${btnTxt}</button>
-    `;
-    bfTrack.appendChild(div);
+    // ข้อความในปุ่ม
+    const btnHtml =
+          state==="used"    ? '<span class="inline-block bg-gray-300 text-white px-4 py-1 rounded">ใช้แล้ว</span>'
+        : state==="claimed" ? `<button class="btn-use bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded" data-id="${r.id}">ใช้</button>`
+        : state==="claim"   ? `<button class="btn-claim bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded" data-id="${r.id}">กดรับ</button>`
+        :                     `<span class="inline-block bg-gray-300 text-white px-4 py-1 rounded cursor-not-allowed">รอแต้ม</span>`;
+
+    /* 2-3) element HTML */
+    track.insertAdjacentHTML("beforeend",`
+      <div class="flex flex-col items-center gap-2 text-center ${cls}">
+        <img src="${r.img}" class="w-20 h-20 rounded-full border-2 border-white shadow"
+             data-id="${r.id}">
+        <span class="text-xs text-gray-600">${need} แต้ม</span>
+        ${btnHtml}
+      </div>
+    `);
   });
 
-  bfTrack.querySelectorAll('.bf-btn').forEach(btn=>{
-    if(btn.disabled) return;
+  /* 3) ติด event ปุ่ม */
+  track.querySelectorAll(".btn-claim").forEach(btn=>{
     btn.onclick = async ()=>{
-      const id = btn.dataset.id;
-      const state = btn.dataset.state;
-      const action = state==='claim' ? 'claim_reward' : 'use_reward';
-      const msg = state==='claim' ? 'ยืนยันแลกรางวัลนี้?' : 'ใช้รางวัลนี้ตอนนี้หรือไม่?';
-      if(!confirm(msg)) return;
-      btn.disabled = true;
-      try {
-        const res = await fetch(`${API}?action=${action}&no=${user.no}&id=${id}`);
-        const j = await res.json();
-        if(j.status==='success'){
-          animatePop(id);
-          await loadPass();
-        } else {
-          alert('ดำเนินการไม่สำเร็จ');
-          btn.disabled = false;
-        }
-      } catch {
-        alert('network error');
-        btn.disabled = false;
-      }
+       if(!confirm("ยืนยันรับรางวัลนี้?")) return;
+       btn.disabled = true;
+       const id = btn.dataset.id;
+       const j = await fetch(`${API}?action=claim_reward&no=${user.no}&id=${id}`).then(r=>r.json()).catch(()=>({status:"error"}));
+       if(j.status==="success") loadPass(); else alert("รับรางวัลไม่สำเร็จ");
     };
   });
+
+  track.querySelectorAll(".btn-use").forEach(btn=>{
+    btn.onclick = async ()=>{
+       if(!confirm("ใช้รางวัลนี้ตอนนี้หรือไม่?")) return;
+       btn.disabled = true;
+       const id = btn.dataset.id;
+       const j = await fetch(`${API}?action=use_reward&no=${user.no}&id=${id}`).then(r=>r.json()).catch(()=>({status:"error"}));
+       if(j.status==="success") loadPass(); else alert("ใช้รางวัลไม่สำเร็จ");
+    };
+  });
+}
+
+/* ---------- โหลดข้อมูล (call เมื่อเปิดหน้า หรือหลัง claim/use) ---------- */
+async function loadPass(){
+  if(!user) return;
+  try{
+     const j = await fetch(`${API}?action=list_rewards&no=${user.no}`).then(r=>r.json());
+     if(j.status==="success"){
+        document.getElementById("bf-point").textContent = j.point;  // (หากมี element นี้)
+        renderPass(j.rewards, j.point);
+     }
+  }catch(e){ console.error(e); }
 }
 
 loadPass();
