@@ -258,13 +258,18 @@ async function chooseChapter(subj,mode){
 
   track.innerHTML = j.rewards.map(rw=>{
 
-     const cls = rw.status==="used"   ? "opacity-25"
-              : rw.status==="claimed"? "ring-4 ring-green-400"
-              : j.point>=rw.need     ? "animate-pulse"
-              : "grayscale";
-     const btn  = rw.status==="locked"  ? "locked"
-               : rw.status==="claimed" ? "use"
-               : "claim";
+/* ------------- กำหนด css / ปุ่ม ------------- */
+let state = rw.status;              // locked | claimed | used
+if(state==="locked" && j.point >= rw.need){
+  state = "claim";                  // ปลดล็อกอัตโนมัติ
+}
+
+const cls = state==="used"   ? "opacity-25"
+          : state==="claimed"? "ring-4 ring-green-400"
+          : state==="claim"  ? "animate-pulse"
+          : "grayscale";
+
+const btn = state;                  // ปุ่มกับ state เหมือนกัน (locked | claim | use)
 
      return`
      <div class="flex flex-col items-center w-20 relative">
