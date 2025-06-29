@@ -138,6 +138,30 @@ function reviewHTML(){
 
 /* ───────── util ───────── */
 function shuffle(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} }
+
+  function sendQuizResult(){
+  const pct = Math.round(score/quiz.length*100);
+  fetch(`${API}?action=update_progress&type=quiz&no=${user.no}&score=${pct}`)
+       .catch(()=>{});
+}
+
+  function showSummary(){
+  const percent = Math.round(score/quiz.length*100);
+  const bonus   = Math.floor(percent/10);               // 80→8 …
+
+  document.getElementById("box").innerHTML = `
+     <h2 class="text-2xl font-bold mb-2">คุณทำได้ ${score}/${quiz.length} คะแนน</h2>
+     <p class="mb-4 text-blue-700 font-semibold text-lg">คิดเป็น ${percent}% ${
+         bonus>0 ? `(รับแต้มพิเศษ +${bonus})` : ""
+     }</p>
+     ${isMAX && wrong.length ? reviewHTML() : ""}
+     <a href="brain.html"
+        class="inline-block mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl">
+        กลับหน้าแรก
+     </a>`;
+
+  sendQuizResult();      // ⬅️  บันทึกลงชีท
+}
 </script>
 </body>
 </html>
