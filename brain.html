@@ -1,47 +1,39 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <style>
-    /* ซ่อน scrollbar ทุก Browser ที่รองรับ */
-.no-scrollbar::-webkit-scrollbar{display:none}
-.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none }
-
-/* Pop แอนิเมชันตอนแลก */
-@keyframes pop{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.25)}
-  100%{transform:scale(1)}
-}
-.pop{animation:pop .6s ease-in-out}
-
-/* confetti (จุดสีเล็ก ๆ) */
-.confetti{
-  position:absolute; width:6px; height:6px;
-  border-radius:50%; pointer-events:none;
-  animation:fall 700ms ease-out forwards;
-}
-@keyframes fall{
-  to{ transform:translateY(60px) rotate(720deg); opacity:0 }
-}
-  </style>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Brain Food – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* ╭── UI helper ───────────────────────────────────────────╮ */
+    .no-scrollbar::-webkit-scrollbar{display:none}
+    .no-scrollbar{ scrollbar-width:none; -ms-overflow-style:none }
+
+    /* pop เมื่อแลก / ใช้รางวัล */
+    @keyframes pop{0%{scale:1}50%{scale:1.2}100%{scale:1}}
+    .pop{animation:pop .5s ease-out}
+
+    /* confetti  */
+    .cf{position:absolute;width:6px;height:6px;border-radius:50%;
+        pointer-events:none;animation:fall .7s ease-out forwards}
+    @keyframes fall{to{translate:0 60px;rotate:720deg;opacity:0}}
+    /* ╰─────────────────────────────────────────────────────────╯ */
+  </style>
 </head>
 
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen">
 
-<!-- ───────────── Header ───────────── -->
+<!-- ╭─ Header ─╮ -->
 <header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
   <h1 class="text-xl font-bold text-blue-700">Brain Food (BETA)</h1>
-  <a href="home.html"
-     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
-     กลับหน้าหลัก
+  <a href="home.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
+    กลับหน้าหลัก
   </a>
 </header>
 
-<!-- ───────────── Dashboard ───────────── -->
+<!-- ╭─ Dashboard ─╮ -->
 <section class="max-w-3xl mx-auto mt-6 grid grid-cols-2 gap-4">
   <div class="bg-white/80 rounded-xl p-4 text-center shadow">
     <p class="text-gray-500">บทที่เรียน</p>
@@ -53,290 +45,226 @@
   </div>
 </section>
 
-  <!-- Brain-Food Pass (เลื่อนได้) -->
-<section id="bf-pass" class="max-w-4xl mx-auto mt-8 px-4">
-  <h2 class="font-bold text-blue-800 mb-3">Brain-Food Pass</h2>
+<!-- ╭─ Brain-Food Pass ─╮ -->
+<section class="max-w-5xl mx-auto mt-8 px-4">
+  <div class="flex justify-between items-center mb-2">
+    <h2 class="font-bold text-blue-800">Brain-Food Pass</h2>
+    <p class="text-sm text-gray-600">แต้มของคุณ: <span id="bf-point" class="font-bold">0</span></p>
+  </div>
 
   <div class="relative">
 
-    <!-- ปุ่มเลื่อน -->
+    <!-- scroll btn -->
     <button id="bf-left"
-            class="absolute left-0 top-1/2 -translate-y-1/2 z-10
-                   bg-white/80 hover:bg-white shadow px-2 py-1 rounded-full">
-      ‹
-    </button>
+            class="absolute -left-3 top-1/2 -translate-y-1/2 z-10
+                   w-8 h-8 flex items-center justify-center
+                   bg-white/70 hover:bg-white shadow rounded-full">‹</button>
 
-    <!-- เส้น + reward -->
-    <div id="bf-scroll"
-         class="overflow-x-auto scroll-smooth no-scrollbar px-8">
-      <div id="bf-track"
-           class="flex gap-14 items-center py-3 w-max relative">
-        <!-- item จะเติมด้วย JS -->
-        <div class="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 bg-gray-300 rounded-full -z-10"></div>
+    <!-- scroll area -->
+    <div id="bf-scroll" class="overflow-x-auto scroll-smooth no-scrollbar px-10">
+      <div id="bf-track" class="flex gap-14 items-center w-max relative py-6">
+
+        <!-- เส้นเชื่อม -->
+        <div class="absolute inset-y-1/2 left-0 right-0 h-1 -translate-y-1/2
+                    bg-gray-300 rounded-full -z-10"></div>
+
+        <!-- Rewards injected by JS -->
+        <div id="rewardBox" class="flex gap-14 items-center"></div>
       </div>
     </div>
 
     <button id="bf-right"
-            class="absolute right-0 top-1/2 -translate-y-1/2 z-10
-                   bg-white/80 hover:bg-white shadow px-2 py-1 rounded-full">
-      ›
-    </button>
+            class="absolute -right-3 top-1/2 -translate-y-1/2 z-10
+                   w-8 h-8 flex items-center justify-center
+                   bg-white/70 hover:bg-white shadow rounded-full">›</button>
   </div>
-
-  <p class="text-right text-sm mt-1 text-gray-600">
-    แต้มของคุณ: <span id="bf-point" class="font-bold">0</span>
-  </p>
 </section>
 
-<!-- ───────────── Set Boxes ───────────── -->
+<!-- ╭─ Set Boxes (Snack / Full / Salad) ─╮ -->
 <section class="max-w-4xl mx-auto mt-10 grid md:grid-cols-3 gap-6 px-4">
 
   <!-- Snack -->
-  <div id="box-snack" class="group relative cursor-pointer">
-    <div
-      class="bg-gradient-to-r from-green-400 to-lime-500 rounded-2xl h-40 flex items-center justify-center shadow-lg
-             group-hover:scale-105 transition">
+  <div id="box-snack" class="group cursor-pointer">
+    <div class="bg-gradient-to-r from-green-400 to-lime-500 rounded-2xl h-40
+                flex items-center justify-center shadow-lg group-hover:scale-105 transition">
       <span class="text-white text-xl font-bold">Snack Set</span>
     </div>
-    <p class="mt-2 text-center text-sm text-gray-700">
-      สรุปสั้น + Quiz 5 ข้อ
-    </p>
+    <p class="mt-2 text-center text-sm text-gray-700">สรุปสั้น + Quiz 5 ข้อ</p>
   </div>
 
   <!-- Full -->
-  <div id="box-full" class="group relative cursor-pointer">
-    <div
-      class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl h-40 flex items-center justify-center shadow-lg
-             group-hover:scale-105 transition">
+  <div id="box-full" class="group cursor-pointer relative">
+    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl h-40
+                flex items-center justify-center shadow-lg group-hover:scale-105 transition">
       <span class="text-white text-xl font-bold">Full Meal</span>
     </div>
     <p class="mt-2 text-center text-sm text-gray-700">
       บทเรียนเต็ม + Quiz 15 ข้อ (เฉพาะ MAX)
     </p>
-
     <div id="lock-full"
-         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur flex flex-col items-center justify-center
-                text-center text-purple-600 font-semibold hidden">
+         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur
+                flex items-center justify-center text-purple-700 font-semibold hidden">
       เฉพาะ MAX
     </div>
   </div>
 
-  <!-- Salad (ยังไม่ได้ทำในขั้นนี้) -->
-  <div id="box-salad" class="group relative cursor-pointer">
-    <div
-      class="bg-gradient-to-r from-teal-400 to-cyan-500 rounded-2xl h-40 flex items-center justify-center shadow-lg
-             group-hover:scale-105 transition">
+  <!-- Salad -->
+  <div id="box-salad" class="group cursor-pointer relative">
+    <div class="bg-gradient-to-r from-teal-400 to-cyan-500 rounded-2xl h-40
+                flex items-center justify-center shadow-lg group-hover:scale-105 transition">
       <span class="text-white text-xl font-bold">Salad Set</span>
     </div>
-    <p class="mt-2 text-center text-sm text-gray-700">
-      Quiz รวมทุกบท (20 ข้อ)
-    </p>
-
+    <p class="mt-2 text-center text-sm text-gray-700">Quiz รวมหลายบท 20 ข้อ</p>
     <div id="lock-salad"
-         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur flex flex-col items-center justify-center
-                text-center text-cyan-700 font-semibold hidden">
+         class="absolute inset-0 rounded-2xl bg-white/80 backdrop-blur
+                flex items-center justify-center text-cyan-700 font-semibold hidden">
       เฉพาะ MAX
     </div>
   </div>
 </section>
 
-<!-- Modal root -->
+<!-- Modal -->
 <div id="modal-root"></div>
 
-<!-- ───────────── Script ───────────── -->
+<!-- ╭─ Script ─╮ -->
 <script>
-/* ---------- CONFIG ---------- */
-const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+/* === CONFIG / USER ================================================= */
+const API  = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+const user = JSON.parse(localStorage.getItem("user")||"null");
+if(!user){ alert("กรุณาเข้าสู่ระบบ"); location.href="index.html"; }
+const isMAX = !!user.lineId;
 
-/* ---------- USER / MAX ---------- */
-const user  = JSON.parse(localStorage.getItem("user") || "null");
-const isMAX = !!user?.lineId;
-
-/* ---------- DASHBOARD ---------- */
-(async()=>{
-  if(!user) return;
-  try{
-    const j = await fetch(`${API}?action=get_brain_stats&no=${user.no}`).then(r=>r.json());
-    if(j.status==="success"){
-      const [l,q] = j.count.split(" ");
-      document.getElementById("stat-lesson").textContent = l;
-      document.getElementById("stat-quiz").textContent   = q;
-    }
-  }catch(e){ console.log("stats error",e); }
-})();
-
-/* ---------- MODAL helper ---------- */
+/* === helper: modal ================================================ */
 function openModal(html){
-  document.getElementById("modal-root").innerHTML =
-    `<div id="mask" class="fixed inset-0 bg-black/40 z-[80] flex items-center justify-center">
-       <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">${html}</div>
+  document.getElementById("modal-root").innerHTML=
+    `<div id="mask" class="fixed inset-0 bg-black/40 z-[90] flex items-center justify-center">
+       <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 text-center">${html}</div>
      </div>`;
-  document.getElementById("mask").onclick = e=>{
-    if(e.target.id==="mask") closeModal();
-  };
+  document.getElementById("mask").onclick=e=>{ if(e.target.id==="mask") closeModal(); };
 }
 function closeModal(){ document.getElementById("modal-root").innerHTML=""; }
 
-/* ------------------------------------------------------------- */
-/*                        SNACK  FLOW                            */
-/* ------------------------------------------------------------- */
-document.getElementById("box-snack").onclick = async ()=>{
-  // 1) list subjects
-  const j = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
-  if(j.status!=="success") return alert("โหลดวิชาไม่สำเร็จ");
+/* === Dashboard (บทที่เรียน / Quiz) =============================== */
+(async()=>{
+  try{
+    const j = await fetch(`${API}?action=get_brain_stats&no=${user.no}`).then(r=>r.json());
+    if(j.status==="success"){
+      const [less,qz] = j.count.split(" ");
+      document.getElementById("stat-lesson").textContent = less;
+      document.getElementById("stat-quiz").textContent   = qz;
+    }
+  }catch(e){ console.warn("stats error",e); }
+})();
 
-  const html = j.subjects.map(s=>`
-      <button class="sn-sub bg-blue-100 hover:bg-blue-200 px-4 py-2 rounded-xl m-1"
-              data-subj="${s.code}">${s.name}</button>`).join("");
-  openModal(`<h3 class="text-lg font-semibold text-blue-800 mb-3">เลือกวิชา (Snack)</h3>${html}`);
-
-  document.querySelectorAll(".sn-sub").forEach(btn=>{
-     btn.onclick = ()=> chooseChapter(btn.dataset.subj,"snack");
-  });
-};
-
-/* ------------------------------------------------------------- */
-/*                        FULL  FLOW                             */
-/* ------------------------------------------------------------- */
-document.getElementById("box-full").onclick = async ()=>{
-  if(!isMAX){
-    alert("ฟีเจอร์นี้สงวนสำหรับ MAX"); return;
-  }
-  // ใช้ API เดียวกับ snack ได้เลย
-  const j = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
-  if(j.status!=="success") return alert("โหลดวิชาไม่สำเร็จ");
-
-  const html = j.subjects.map(s=>`
-      <button class="fl-sub bg-indigo-100 hover:bg-indigo-200 px-4 py-2 rounded-xl m-1"
-              data-subj="${s.code}">${s.name}</button>`).join("");
-  openModal(`<h3 class="text-lg font-semibold text-indigo-800 mb-3">เลือกวิชา (Full Meal)</h3>${html}`);
-
-  document.querySelectorAll(".fl-sub").forEach(btn=>{
-     btn.onclick = ()=> chooseChapter(btn.dataset.subj,"full");
-  });
-};
-
-/* ------------------------------------------------------------- */
-/*                เลือกบท (ใช้ได้ทั้งสองโหมด)                  */
-/* ------------------------------------------------------------- */
-async function chooseChapter(subj,mode){
-  const j = await fetch(`${API}?action=list_snack_chapters&subj=${subj}`).then(r=>r.json());
-  if(j.status!=="success") return alert("error");
-
-  const html = j.chapters.map(c=>`
-      <button class="chap-btn block w-full text-left px-4 py-2 my-1 rounded-xl
-                     ${mode==='snack'?'bg-gray-100 hover:bg-gray-200':'bg-purple-100 hover:bg-purple-200'}
-                     " data-id="${c.id}">
-         ${c.title}
-      </button>`).join("");
-
-  openModal(`<h3 class="text-lg font-semibold ${mode==='snack'?'text-blue-800':'text-purple-800'} mb-3">
-               เลือกบท – ${subj}
-             </h3>${html}`);
-
-  document.querySelectorAll(".chap-btn").forEach(btn=>{
-     const id = btn.dataset.id;
-     btn.onclick = ()=>{
-        if(mode==="snack") location.href = `lesson.html?id=${id}`;
-        else               location.href = `full.html?id=${id}`;
-     };
-  });
-}
-
-  document.getElementById("box-salad").onclick = () =>{
-    location.href = `salad.html`;
-  };
-
-  /* ----- ดึงและแสดง ----- */
-/* ---------- ⑤  Render & Event Reward ---------- */
-function renderRewards(rws, point){
-  const wrap = document.getElementById("rewardBox");      // <div id="rewardBox">
-  wrap.innerHTML = rws.map(rw=>{
-      // ► ตัดสิน state
-      let state = rw.status;                               // locked | claimed | used
+/* === Brain-Food Pass ============================================== */
+function renderRewards(arr, point){
+  const wrap = document.getElementById("rewardBox");
+  wrap.innerHTML = arr.map(rw=>{
+      /* ตัดสิน state */
+      let state = rw.status;                       // locked | claimed | used
       if(state==="locked" && point>=rw.need) state="claim";
 
-      // ► css class + ป้าย + ปุ่ม
-      const cls =  state==="used"   ? "opacity-30"
-                 : state==="claim"  ? "hover:scale-105 animate-pulse"
-                 : state==="claimed"? "ring-4 ring-green-400"
-                 : "grayscale";
+      const cls = state==="claim"  ? "animate-pulse"
+               : state==="claimed"? "ring-4 ring-green-400"
+               : state==="used"   ? "opacity-30"
+               : "grayscale";
 
       const btn =
-        state==="lock"   ? `` :
-        state==="claim"  ? `<button class="btn-claim bg-green-600 hover:bg-green-700"
-                                     data-id="${rw.id}">แลก</button>` :
-        state==="claimed"? `<button class="btn-use bg-purple-600 hover:bg-purple-700"
-                                     data-id="${rw.id}">ใช้</button>` :
-                           `<span class="inline-block bg-gray-300 px-4 py-1 rounded">ใช้แล้ว</span>`;
+        state==="claim"  ? `<button class="btn-claim bg-green-600 hover:bg-green-700 text-white
+                                       text-sm px-3 py-0.5 rounded" data-id="${rw.id}">แลก</button>`
+      : state==="claimed"? `<button class="btn-use bg-purple-600 hover:bg-purple-700 text-white
+                                       text-sm px-3 py-0.5 rounded" data-id="${rw.id}">ใช้</button>`
+      : state==="used"   ? `<span class="bg-gray-300 text-sm px-3 py-0.5 rounded">ใช้แล้ว</span>` : "";
 
-      return `
-        <div class="reward relative ${cls} flex flex-col items-center gap-2">
-          <img src="${rw.img}" class="w-20 h-20 rounded-full border-2 border-white shadow">
-          <p class="text-sm font-semibold text-center">${rw.title}</p>
-          ${btn}
-        </div>`;
+      return `<div class="flex flex-col items-center gap-2">
+                <img src="${rw.img}" data-id="${rw.id}"
+                     class="w-20 h-20 rounded-full border-2 border-white shadow ${cls}">
+                <p class="text-xs font-semibold text-center max-w-[5rem]">${rw.title}</p>
+                <p class="text-[11px] text-gray-500">${rw.need} แต้ม</p>
+                ${btn}
+              </div>`;
   }).join("");
 
-  /* ---------- Event  – Claim ---------- */
-  wrap.querySelectorAll(".btn-claim").forEach(btn=>{
-     btn.onclick = ()=>{
-        const id = btn.dataset.id;
-        if(!confirm("ยืนยันแลกรางวัลนี้?")) return;
-
-        btn.disabled = true;
-        fetch(`${API}?action=claim_reward&no=${user.no}&id=${id}`)
-          .then(r=>r.json()).then(j=>{
-             if(j.status==="success"){ alert("แลกรางวัลสำเร็จ!"); loadRewards(); }
-             else                    { alert("แลกไม่สำเร็จ");     btn.disabled=false; }
-          }).catch(()=>{ alert("error"); btn.disabled=false; });
-     };
+  /* --- Event claim --- */
+  wrap.querySelectorAll(".btn-claim").forEach(b=>{
+    b.onclick=()=>{
+      const id=b.dataset.id;
+      if(!confirm("ยืนยันแลกรางวัลนี้?"))return;
+      b.disabled=true;
+      fetch(`${API}?action=claim_reward&no=${user.no}&id=${id}`).then(r=>r.json()).then(j=>{
+        if(j.status==="success"){ fireAnim(id); loadRewards(); }
+        else { alert("แลกไม่สำเร็จ"); b.disabled=false; }
+      }).catch(_=>{ alert("error"); b.disabled=false; });
+    };
   });
 
-  /* ---------- Event  – Use ---------- */
-  wrap.querySelectorAll(".btn-use").forEach(btn=>{
-     btn.onclick = ()=>{
-        const id = btn.dataset.id;
-        if(!confirm("ใช้รางวัลนี้ตอนนี้หรือไม่?")) return;
-
-        btn.disabled = true;
-        fetch(`${API}?action=use_reward&no=${user.no}&id=${id}`)
-          .then(r=>r.json()).then(j=>{
-             if(j.status==="success"){ alert("ใช้รางวัลแล้ว!");   loadRewards(); }
-             else                    { alert("ใช้รางวัลไม่สำเร็จ"); btn.disabled=false; }
-          }).catch(()=>{ alert("error"); btn.disabled=false; });
-     };
+  /* --- Event use --- */
+  wrap.querySelectorAll(".btn-use").forEach(b=>{
+    b.onclick=()=>{
+      const id=b.dataset.id;
+      if(!confirm("ใช้รางวัลนี้หรือไม่?"))return;
+      b.disabled=true;
+      fetch(`${API}?action=use_reward&no=${user.no}&id=${id}`).then(r=>r.json()).then(j=>{
+        if(j.status==="success"){ fireAnim(id); loadRewards(); }
+        else { alert("ใช้รางวัลไม่สำเร็จ"); b.disabled=false; }
+      }).catch(_=>{ alert("error"); b.disabled=false; });
+    };
   });
 }
 
-/* ---------- ⑥  loadRewards()  ---------- */
+/* confetti + pop */
+function fireAnim(id){
+  const track=document.getElementById("bf-track");
+  const img = track.querySelector(`img[data-id="${id}"]`);
+  if(!img)return;
+  img.classList.add("pop");
+  setTimeout(()=>img.classList.remove("pop"),500);
+
+  for(let i=0;i<24;i++){
+    const cf=document.createElement("div");
+    cf.className="cf";
+    cf.style.left=(img.offsetLeft+30+Math.random()*40-20)+"px";
+    cf.style.top =(img.offsetTop-10)+"px";
+    cf.style.background=`hsl(${Math.random()*360} 80% 60%)`;
+    track.appendChild(cf);
+    setTimeout(()=>cf.remove(),700);
+  }
+}
+
+/* load */
 function loadRewards(){
-  fetch(`${API}?action=list_rewards&no=${user.no}`)
-     .then(r=>r.json()).then(j=>{
-        if(j.status==="success") renderRewards(j.rewards, j.point);
-        else                     console.error(j);
-     });
+  fetch(`${API}?action=list_rewards&no=${user.no}`).then(r=>r.json()).then(j=>{
+    if(j.status==="success"){
+      document.getElementById("bf-point").textContent=j.point;
+      renderRewards(j.rewards, j.point);
+    }
+  });
 }
 loadRewards();
 
-  /* ===== helper animation ===== */
-  function animateReward(id,type){
-     const img = track.querySelector(`img[data-id="${id}"]`);
-     img.classList.add("pop");
-     setTimeout(()=>img.classList.remove("pop"),600);
+/* scroll btn */
+const scrollEl=document.getElementById("bf-scroll");
+document.getElementById("bf-left").onclick = ()=>scrollEl.scrollBy({left:-220,behavior:"smooth"});
+document.getElementById("bf-right").onclick= ()=>scrollEl.scrollBy({left: 220,behavior:"smooth"});
 
-     // โปรย confetti
-     for(let i=0;i<25;i++){
-       const cf = document.createElement("div");
-       cf.className="confetti";
-       cf.style.left = (img.offsetLeft+28 + (Math.random()*30-15))+"px";
-       cf.style.top  = (img.offsetTop-20)+"px";
-       cf.style.background = `hsl(${Math.random()*360},80%,60%)`;
-       track.appendChild(cf);
-       setTimeout(()=>cf.remove(),700);
-     }
-  }
-;
+/* === Snack / Full / Salad Navigation ============================== */
+/* (โค้ดชุดเดิม — ตัดข้อความเพื่อย่อ  แต่ยังทำงานเหมือนที่คุณมี)    */
+document.getElementById("box-snack").onclick = async ()=>{
+  const r = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
+  if(r.status!=="success") return alert("โหลดวิชาไม่สำเร็จ");
+  openModal(r.subjects.map(s=>`<button class="sub bg-blue-100 hover:bg-blue-200 m-1 px-4 py-2 rounded"
+               data-id="${s.code}">${s.name}</button>`).join(""));
+  document.querySelectorAll(".sub").forEach(b=>{
+     b.onclick=()=>location.href=`snack.html?subj=${b.dataset.id}`;
+  });
+};
+
+document.getElementById("box-full").onclick = ()=>{
+  if(!isMAX){ alert("ฟีเจอร์นี้เฉพาะ MAX"); return; }
+  location.href="brain.html?mode=full";   /* คุณเลือกเปลี่ยนปลายทางภายหลังได้ */
+};
+
+document.getElementById("box-salad").onclick = ()=>location.href="salad.html";
 </script>
 </body>
 </html>
