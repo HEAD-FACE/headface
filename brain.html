@@ -278,56 +278,69 @@ async function loadPass(){
   } catch(e) { console.log("loadPass error", e); }
 }
 
-/* ---------- renderPass (ใหม่) ---------- */
+/* ---------- renderPass (เพิ่มเส้นกลางแล้ว) ---------- */
 function renderPass(rawRewards, point){
   const track = document.getElementById("bf-track");
-  track.innerHTML = "";                    // เคลียร์ของเก่า
 
-  /* 1) เรียงแต้มต่ำ → สูง */
+  /* 0) ให้แน่ใจว่า track เป็น position-relative สำหรับวางเส้น */
+  track.classList.add("relative");
+
+  /* 1) เรียงรางวัลแต้มต่ำ → สูง */
   const rewards = [...rawRewards].sort((a,b)=> Number(a.need)-Number(b.need));
 
-  /* 2) วาด UI */
+  /* 2) สร้าง HTML — ใส่เส้นก่อน แล้วค่อยต่อรางวัล */
+  let html = `
+    <div class="absolute inset-x-0 top-1/2 -translate-y-1/2
+                h-1 bg-gray-300 rounded-full -z-10"></div>
+  `;
+
   rewards.forEach(r => {
-    /* 2-1) ตัดสิน state */
+    /* ─── ตัดสินสถานะ ─── */
     const need    = Number(r.need)||0;
     const myPoint = Number(point)||0;
 
-    let state = r.status;                  // locked | claimed | used
-    if(state==="locked" && myPoint >= need) state="claim";
+    let state = r.status;                        // locked | claimed | used
+    if(state==="locked" && myPoint>=need) state="claim";
 
-    /* 2-2) กำหนดคลาส/ปุ่ม */
-    const cls =
+    /* ─── class ภาพ + ปุ่ม ─── */
+    const clsImg =
           state==="used"    ? "opacity-30"
         : state==="claim"   ? "hover:scale-105 animate-pulse"
-        : state==="claimed" ? ""
-        :                     "grayscale";
+        :                     "grayscale";       // locked & claimed ให้เทา / ปกติ
 
-    // ข้อความในปุ่ม
     const btnHtml =
-          state==="used"    ? '<span class="inline-block bg-gray-300 text-white px-4 py-1 rounded">ใช้แล้ว</span>'
-        : state==="claimed" ? `<button class="btn-use bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded" data-id="${r.id}">ใช้</button>`
-        : state==="claim"   ? `<button class="btn-claim bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded" data-id="${r.id}">กดรับ</button>`
-        :                     `<span class="inline-block bg-gray-300 text-white px-4 py-1 rounded cursor-not-allowed">รอแต้ม</span>`;
+          state==="used"
+        ? `<span class="text-xs bg-gray-300 text-white px-3 py-1 rounded">ใช้แล้ว</span>`
+        : state==="claimed"
+        ? `<button class="btn-use bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                   data-id="${r.id}">ใช้</button>`
+        : state==="claim"
+        ? `<button class="btn-claim bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                   data-id="${r.id}">แลก</button>`
+        : `<span class="text-xs bg-gray-300 text-white px-3 py-1 rounded cursor-not-allowed">
+             รอแต้ม
+           </span>`;
 
-    /* 2-3) element HTML */
-    track.insertAdjacentHTML("beforeend",`
-      <div class="flex flex-col items-center gap-2 text-center ${cls}">
-        <img src="${r.img}" class="w-20 h-20 rounded-full border-2 border-white shadow"
-             data-id="${r.id}">
-        <p class="text-xs font-semibold text-center w-20 truncate">${r.title}</p>
-        <span class="text-xs text-gray-600">${need} แต้ม</span>
+    /* ─── ต่อ HTML ─── */
+    html += `
+      <div class="flex flex-col items-center gap-1 min-w-[80px]">
+        <img src="${r.img}" data-id="${r.id}"
+             class="w-16 h-16 rounded-full border-2 border-white shadow ${clsImg}">
+        <p class="text-xs text-center">${need} แต้ม</p>
         ${btnHtml}
-      </div>
-    `);
+      </div>`;
   });
 
-  /* 3) ติด event ปุ่ม */
+  track.innerHTML = html;                        // ใส่ลง DOM
+
+  /* 3) ติด event ปุ่ม Claim / Use (เหมือนเดิม) */
   track.querySelectorAll(".btn-claim").forEach(btn=>{
     btn.onclick = async ()=>{
        if(!confirm("ยืนยันรับรางวัลนี้?")) return;
        btn.disabled = true;
        const id = btn.dataset.id;
-       const j = await fetch(`${API}?action=claim_reward&no=${user.no}&id=${id}`).then(r=>r.json()).catch(()=>({status:"error"}));
+       const j  = await fetch(`${API}?action=claim_reward&no=${user.no}&id=${id}`)
+                         .then(r=>r.json()).catch(()=>({status:"error"}));
        if(j.status==="success") loadPass(); else alert("รับรางวัลไม่สำเร็จ");
     };
   });
@@ -337,7 +350,8 @@ function renderPass(rawRewards, point){
        if(!confirm("ใช้รางวัลนี้ตอนนี้หรือไม่?")) return;
        btn.disabled = true;
        const id = btn.dataset.id;
-       const j = await fetch(`${API}?action=use_reward&no=${user.no}&id=${id}`).then(r=>r.json()).catch(()=>({status:"error"}));
+       const j  = await fetch(`${API}?action=use_reward&no=${user.no}&id=${id}`)
+                         .then(r=>r.json()).catch(()=>({status:"error"}));
        if(j.status==="success") loadPass(); else alert("ใช้รางวัลไม่สำเร็จ");
     };
   });
