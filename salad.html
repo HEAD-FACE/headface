@@ -6,118 +6,115 @@
   <title>Salad Set – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="bg-gradient-to-br from-teal-100 to-cyan-200 min-h-screen flex flex-col">
 
-<!-- ──────  Header  ────── -->
+<!-- ────────── HEADER ────────── -->
 <header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
-  <h1 class="text-lg md:text-xl font-bold text-cyan-700">Salad Set – Quiz รวมหลายบท</h1>
+  <h1 class="text-lg md:text-xl font-bold text-cyan-700">Salad Set – Quiz ผสมหลายบท</h1>
   <a href="brain.html"
      class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-1 rounded-xl font-semibold">
-     กลับหน้าแรก
+     กลับหน้า Brain Food
   </a>
 </header>
 
-<!-- ────── ① เลือกวิชา ────── -->
+<!-- ────────── STEP 1 : เลือกวิชา ────────── -->
 <section id="stepSubject" class="flex-1 flex flex-col items-center justify-center p-6">
   <h2 class="text-xl font-bold mb-4 text-cyan-800">เลือกวิชา</h2>
   <div id="subjBox" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
 </section>
 
-<!-- ────── ② เลือกบท ────── -->
-<section id="stepChapter" class="hidden flex-1 flex flex-col items-center justify-center p-6">
-  <h2 class="text-xl font-bold mb-4 text-cyan-800">เลือกบท (เลือกได้หลายบท)</h2>
+<!-- ────────── STEP 2 : เลือกบท (หลายบท) ────────── -->
+<section id="stepChapter" class="hidden flex-1 flex-col items-center justify-center p-6">
+  <h2 id="subjTitle" class="text-xl font-bold mb-4 text-cyan-800"></h2>
+
   <form id="chapForm"
-        class="max-h-80 w-full max-w-md overflow-y-auto p-3 border rounded bg-white/60 backdrop-blur"></form>
+        class="max-h-80 w-full max-w-md overflow-y-auto p-3 border rounded bg-white/70"></form>
 
   <button id="startQuiz"
-          class="mt-4 bg-cyan-600 hover:bg-cyan-700 text-white px-8 py-2 rounded-xl disabled:opacity-40"
+          class="mt-5 bg-cyan-600 hover:bg-cyan-700 text-white px-8 py-2 rounded-xl disabled:opacity-40"
           disabled>
-    เริ่มทำ Quiz
+    เริ่มทำ Quiz 20 ข้อ
   </button>
 </section>
 
+<!-- ────────── MODAL ROOT (แจ้งเกินสิทธิ์) ────────── -->
+<div id="modal-root"></div>
+
 <script>
-/* ---------- CONSTANTS ---------- */
+/* ---------------- CONFIG ---------------- */
 const API   = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
 const user  = JSON.parse(localStorage.getItem("user")||"null");
-const isMAX = !!user?.lineId;
+if(!user){ alert("กรุณาเข้าสู่ระบบ"); location.href="index.html"; }
 
-if(!user){
-  alert("กรุณาเข้าสู่ระบบ"); location.href="index.html";
+/* ------------ MODAL helper ------------- */
+function openModal(html){
+  document.getElementById("modal-root").innerHTML =
+    `<div id="mask" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+       <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">${html}</div>
+     </div>`;
+  document.getElementById("mask").onclick = e=>{
+     if(e.target.id==="mask") closeModal();
+  };
 }
+function closeModal(){ document.getElementById("modal-root").innerHTML=""; }
 
-/* ---------- STEP 1 : LOAD SUBJECTS ---------- */
+/* ---------------- STEP 1 : รายชื่อวิชา ---------------- */
 (async()=>{
-  /* 1. รายชื่อวิชา (รี-use endpoint snack) */
-  const subjRes  = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
-  if(subjRes.status!=="success"){ alert("โหลดวิชาล้มเหลว"); return; }
+  const j = await fetch(`${API}?action=list_snack_subjects`).then(r=>r.json());
+  if(j.status!=="success"){ alert("โหลดวิชาไม่ได้"); return; }
 
-  /* 2. ดึง “วิชาที่ทำแล้ววันนี้” (เฉพาะ non-MAX) */
-  let doneToday = [];
-  if(!isMAX){
-    const d = await fetch(`${API}?action=list_salad_done&no=${user.no}`)
-                     .then(r=>r.json()).catch(()=>({status:"err"}));
-    if(d.status==="success") doneToday = d.list;   // เช่น ["ST","MT"]
-  }
+  document.getElementById("subjBox").innerHTML =
+    j.subjects.map(s=>`
+      <button data-code="${s.code}" data-name="${s.name}"
+              class="subj w-full px-4 py-6 bg-white/70 hover:bg-white rounded-xl shadow
+                     text-cyan-700 font-semibold">
+        ${s.name}
+      </button>`).join("");
 
-  /* 3. สร้างปุ่มวิชา */
-  const html = subjRes.subjects.map(s=>{
-     const locked = !isMAX && doneToday.includes(s.code);  // เทา / คลิกไม่ได้
-     return `
-        <button data-code="${s.code}"
-                ${locked ? "disabled" : ""}
-                class="subj w-full px-4 py-5 rounded-xl shadow text-center
-                       font-semibold transition
-                       ${locked
-                          ? "bg-gray-300 text-gray-400 cursor-not-allowed"
-                          : "bg-white/70 hover:bg-white text-cyan-700"}">
-          ${s.name}
-          ${locked ? '<div class="text-[0.7rem]">(ทำแล้ววันนี้)</div>' : ""}
-        </button>`;
-  }).join("");
-
-  document.getElementById("subjBox").innerHTML = html;
-
-  /* 4. bind click */
-  document.querySelectorAll(".subj:not([disabled])").forEach(btn=>{
-     btn.onclick = ()=> loadChapters(btn.dataset.code);
+  document.querySelectorAll(".subj").forEach(btn=>{
+     btn.onclick = () => loadChapters(btn.dataset.code,btn.dataset.name);
   });
 })();
 
-/* ---------- STEP 2 : CHAPTER LIST ---------- */
-async function loadChapters(subjCode){
-  /* สลับหน้าจอ */
+/* ---------------- STEP 2 : โหลดบท ---------------- */
+async function loadChapters(subjCode, subjName){
   document.getElementById("stepSubject").classList.add("hidden");
   document.getElementById("stepChapter").classList.remove("hidden");
+  document.getElementById("subjTitle").textContent = `เลือกบทของวิชา ${subjName}`;
 
   const j = await fetch(`${API}?action=list_salad_chapters&subj=${subjCode}`).then(r=>r.json());
-  if(j.status!=="success"){ alert("โหลดบทล้มเหลว"); return; }
-
-  const checkboxes = j.chapters.map(c=>`
-      <label class="flex items-center gap-3 mb-2">
-        <input type="checkbox" name="chap" value="${c.id}" class="accent-cyan-600 scale-110">
-        <span>${c.title}</span>
-      </label>`).join("");
+  if(j.status!=="success"){ alert("error"); location.reload(); return; }
 
   const form = document.getElementById("chapForm");
-  form.innerHTML = checkboxes;
+  form.innerHTML = j.chapters.map(c=>`
+       <label class="flex items-start gap-2 mb-2">
+          <input type="checkbox" name="chap" value="${c.id}" class="accent-cyan-600 mt-1">
+          <span>${c.title}</span>
+       </label>`).join("");
 
-  /* เปิดปุ่มเมื่อเลือกอย่างน้อย 1 บท */
   form.onchange = ()=>{
      const any = form.querySelectorAll("input:checked").length>0;
      document.getElementById("startQuiz").disabled = !any;
   };
 
-  window.__saladSubj = subjCode;   // เก็บไว้ใช้ตอนกดเริ่ม
+  /* บันทึกรหัสวิชาไว้ใช้ตอนเริ่ม */
+  window.__saladSubj = subjCode;
 }
 
-/* ---------- START QUIZ ---------- */
-document.getElementById("startQuiz").onclick = ()=>{
-  const ids = [...document.querySelectorAll("#chapForm input:checked")].map(i=>i.value);
-  if(ids.length===0) return;
-  /* 20 ข้อ – คงกำหนดฝั่ง GAS */
-  location.href = `quiz.html?mode=salad&subj=${__saladSubj}&chap=${ids.join(",")}`;
+/* ------------ ปุ่ม “เริ่มทำ Quiz” ------------ */
+document.getElementById("startQuiz").onclick = async ()=>{
+  const sel = [...document.querySelectorAll('#chapForm input:checked')].map(i=>i.value).join(",");
+
+  /* ---------- LIMIT เช็คสำหรับ Free ---------- */
+  const res = await fetch(`${API}?action=check_salad_limit&no=${user.no}&subj=${__saladSubj}`).then(r=>r.json());
+  if(res.status==="limit"){
+     openModal(`<h2 class="text-xl font-bold text-cyan-700 mb-3">ทำครบ 1 ครั้ง/วันแล้ว</h2>
+                <p>ลองวิชาอื่น หรือกลับมาพรุ่งนี้นะครับ 😉</p>`);
+     return;
+  }
+
+  /* ผ่านแล้ว → ไปหน้า Quiz */
+  location.href = `quiz.html?mode=salad&subj=${__saladSubj}&chap=${sel}`;
 };
 </script>
 </body>
