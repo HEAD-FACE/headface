@@ -32,23 +32,26 @@
   <!-- ✨ NEW CSS PART (ใส่ใน <style> ปลายไฟล์เดิม) -->
 
 /* ───── Cartoon patterns ───── */
+/* …ของเดิมคงไว้… */
+
+/* ─── Cartoon backgrounds จากไฟล์ PNG ─── */
 .pattern-snack{
-  background-color:#fff7d6;
-  background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48dGV4dCB5PSI1MCUiIHg9IjUwJSIgZHk9Ii4zOGVtIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjMyIj7wn42pPC90ZXh0Pjwvc3ZnPg==");
-  background-size:60px 60px;
-  background-repeat:repeat;
+  background:url("https://i.postimg.cc/nzPWyPRc/zip-1.png") center/cover no-repeat;
 }
 .pattern-full{
-  background-color:#fef2f2;
-  background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48dGV4dCB5PSI1MCUiIHg9IjUwJSIgZHk9Ii4zOGVtIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjMyIj7wn42SPC90ZXh0Pjwvc3ZnPg==");
-  background-size:60px 60px;
-  background-repeat:repeat;
+  background:url("https://i.postimg.cc/Th84wWvz/zip-2.png") center/cover no-repeat;
 }
 .pattern-salad{
-  background-color:#ecfdf5;
-  background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48dGV4dCB5PSI1MCUiIHg9IjUwJSIgZHk9Ii4zOGVtIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjMyIj7wn5a5PC90ZXh0Pjwvc3ZnPg==");
-  background-size:60px 60px;
-  background-repeat:repeat;
+  background:url("https://i.postimg.cc/J0HFM5v3/zip-3.png") center/cover no-repeat;
+}
+
+/* ─── ทำให้ตัวหนังสือมองเห็นแม้ภาพสว่าง ─── */
+.pattern-snack::after,
+.pattern-full::after,
+.pattern-salad::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;
+  background:rgba(255,255,255,.25);            /* ปรับ .25–.35 ตามชอบ */
+  pointer-events:none;                         /* ให้คลิกผ่านได้ */
 }
 
 /* ───── Hide horizontal scrollbar (ทุก browser) ───── */
