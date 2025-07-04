@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Course-Map | Brain-Food</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* เส้นเชื่อม */
+    .connector::before{
+      content:''; position:absolute; top:50%; left:-50%; width:50%; height:4px;
+      background:#cbd5e1; transform:translateY(-50%);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-cyan-100 min-h-screen flex flex-col">
+
+<header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
+  <h1 id="title" class="text-lg font-bold text-cyan-700">Course</h1>
+  <a href="brain.html"
+     class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-1 rounded-xl font-semibold">
+     เลือกวิชาอื่น
+  </a>
+</header>
+
+<main class="flex-1 flex flex-col items-center p-6">
+  <div id="map" class="flex flex-col gap-8 items-center">
+    <!-- เติมด้วย JS -->
+  </div>
+</main>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+
+/* query */
+const qs   = new URLSearchParams(location.search);
+const subj = qs.get('subject');   // ST
+if(!subj){ location.href='brain.html'; }
+
+document.getElementById('title').textContent = `คอร์สวิชา ${subj}`;
+
+/* load parts */
+(async ()=>{
+  try{
+    const j = await fetch(`${API}?action=listParts&subject_id=${subj}001`).then(r=>r.json());
+    if(j.status!=="success") throw 'error';   // ใช้ 001 เป็นบทที่ 1
+
+    // สมมติใช้บทที่ 1 ไปก่อน ถ้ามีหลายบทจะค่อยเพิ่ม selector
+    const parts = j.parts; // [{part:1,content:'…'}, …]
+
+    const map = document.getElementById('map');
+    parts.forEach((p,i)=>{
+      map.insertAdjacentHTML('beforeend',`
+        <button data-part="${p.part}"
+          class="relative bg-white shadow-lg rounded-full w-28 h-28 flex flex-col justify-center items-center
+                 hover:scale-105 transition connector ${i===0?'':'mt-0'}">
+          <span class="text-xl font-bold text-cyan-700">${p.part}</span>
+          <span class="text-[10px] text-gray-500 px-2 truncate max-w-[80%]">${p.content}</span>
+        </button>
+      `);
+    });
+
+    /* connector ก่อนปุ่มแรกไม่ต้องมีเส้น */
+    map.firstElementChild.classList.remove('connector');
+
+    /* click –> เรียก getQuiz (init) */
+    map.querySelectorAll('button').forEach(btn=>{
+      btn.onclick = ()=>{
+        const part = btn.dataset.part;
+        location.href = `quiz.html?subject=${subj}&part=${part}&mode=init`;
+      };
+    });
+
+  }catch(e){
+    alert('โหลดข้อมูลบทไม่สำเร็จ');
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
