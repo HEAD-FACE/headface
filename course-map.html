@@ -39,7 +39,7 @@ document.getElementById('title').textContent = `วิชา ${subj}`;
 (async()=>{
   try{
     // ① ดึง row ของวิชานี้ทั้งหมด
-    const j = await fetch(`${API}?action=listPartsRaw&subject=${subj}`)
+    const j = await fetch(`${API}?action=listParts&subject=${subj}`)
                      .then(r=>r.json());
     if(j.status!=="success") throw 'err';
 
