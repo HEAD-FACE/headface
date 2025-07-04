@@ -19,35 +19,31 @@
 <main class="flex-1 flex flex-col items-center p-4">
   <h2 class="text-lg font-semibold text-blue-800 my-4">เลือกวิชาเพื่อเริ่มทำคอร์ส</h2>
 
-  <!-- กริดวิชา -->
   <div id="subject-grid"
        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-3xl">
     <!-- เติมด้วย JS -->
   </div>
 </main>
 
-<!-- modal root (ใช้เมื่อมี error) -->
 <div id="modal-root"></div>
 
 <script>
 const API  = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
-const ICON = code => `https://dummyimage.com/100x100/1e40af/ffffff&text=${code}`; // เอา icon placeholder ไปก่อน
+const ICON = code => `https://dummyimage.com/100x100/1e40af/ffffff&text=${code}`;
 
-/* modal helper */
 function openModal(msg){
   document.getElementById("modal-root").innerHTML =
-    `<div id="mask" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-       <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
-         <p>${msg}</p>
-         <button onclick="document.getElementById('modal-root').innerHTML=''"
-                 class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl">
-           ปิด
-         </button>
-       </div>
-     </div>`;
+   `<div id="mask" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
+        <p>${msg}</p>
+        <button onclick="document.getElementById('modal-root').innerHTML=''"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl">
+          ปิด
+        </button>
+      </div>
+    </div>`;
 }
 
-/* load subject list */
 (async ()=>{
   try{
     const j = await fetch(`${API}?action=listSubjects`).then(r=>r.json());
@@ -59,19 +55,16 @@ function openModal(msg){
               class="bg-white/80 hover:bg-white shadow rounded-2xl p-4 flex flex-col items-center gap-2
                      transition hover:scale-105">
         <img src="${ICON(s.code)}" alt="${s.code}" class="w-16 h-16 rounded-full shadow">
-        <span class="font-semibold text-blue-800">${s.code}</span>
+        <span class="font-semibold text-blue-800 text-sm">${s.name}</span>
       </button>
     `).join("");
 
-    /* ไป course-map เมื่อกด */
     grid.querySelectorAll('button').forEach(btn=>{
-      btn.onclick = ()=> location.href = `course-map.html?subject=${btn.dataset.code}&part=1`;
+      btn.onclick = ()=> location.href =
+        `course-map.html?subject=${btn.dataset.code}`;
     });
 
-  }catch(e){
-    console.error(e);
-    openModal("โหลดรายวิชาไม่สำเร็จ");
-  }
+  }catch(e){ console.error(e); openModal("โหลดรายวิชาไม่สำเร็จ"); }
 })();
 </script>
 </body>
