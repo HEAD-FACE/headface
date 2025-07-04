@@ -6,10 +6,11 @@
   <title>Course-Map | Brain-Food</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* เส้นเชื่อม */
-    .connector::before{
-      content:''; position:absolute; top:50%; left:-50%; width:50%; height:4px;
-      background:#cbd5e1; transform:translateY(-50%);
+    /* วง + เส้นแนวตั้ง */
+    .disc{position:relative}
+    .disc:not(:first-child)::before{
+      content:''; position:absolute; top:-48px; left:50%; transform:translateX(-50%);
+      width:4px; height:48px; background:#cbd5e1;
     }
   </style>
 </head>
@@ -23,51 +24,56 @@
   </a>
 </header>
 
-<main class="flex-1 flex flex-col items-center p-6">
-  <div id="map" class="flex flex-col gap-8 items-center">
-    <!-- เติมด้วย JS -->
-  </div>
+<main class="flex-1 flex flex-col items-center p-6 gap-6" id="wrapper">
+  <!-- เติมด้วย JS -->
 </main>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
-
-/* query */
+const API  = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
 const qs   = new URLSearchParams(location.search);
-const subj = qs.get('subject');   // ST
-if(!subj){ location.href='brain.html'; }
+const subj = qs.get('subject');          // ST, MT …
 
-document.getElementById('title').textContent = `คอร์สวิชา ${subj}`;
+if(!subj) location.href='brain.html';
+document.getElementById('title').textContent = `วิชา ${subj}`;
 
-/* load parts */
-(async ()=>{
+(async()=>{
   try{
-    const j = await fetch(`${API}?action=listParts&subject_id=${subj}001`).then(r=>r.json());
-    if(j.status!=="success") throw 'error';   // ใช้ 001 เป็นบทที่ 1
+    // ① ดึง row ของวิชานี้ทั้งหมด
+    const j = await fetch(`${API}?action=listPartsRaw&subject=${subj}`)
+                     .then(r=>r.json());
+    if(j.status!=="success") throw 'err';
 
-    // สมมติใช้บทที่ 1 ไปก่อน ถ้ามีหลายบทจะค่อยเพิ่ม selector
-    const parts = j.parts; // [{part:1,content:'…'}, …]
+    /* ② group ตาม subject_id (ST001, ST002 …) */
+    const grouped = {};
+    j.rows.forEach(r=>{
+      if(!grouped[r.id]) grouped[r.id]=[];
+      grouped[r.id].push(r);
+    });
 
-    const map = document.getElementById('map');
-    parts.forEach((p,i)=>{
-      map.insertAdjacentHTML('beforeend',`
-        <button data-part="${p.part}"
-          class="relative bg-white shadow-lg rounded-full w-28 h-28 flex flex-col justify-center items-center
-                 hover:scale-105 transition connector ${i===0?'':'mt-0'}">
-          <span class="text-xl font-bold text-cyan-700">${p.part}</span>
-          <span class="text-[10px] text-gray-500 px-2 truncate max-w-[80%]">${p.content}</span>
-        </button>
+    /* ③ render lesson-blocks */
+    const wrap = document.getElementById('wrapper');
+    Object.keys(grouped).sort().forEach(lessonId=>{
+      wrap.insertAdjacentHTML('beforeend',`
+        <h2 class="font-semibold text-cyan-800 mt-6 mb-2">บท ${lessonId.slice(-3)}</h2>
+        <div class="flex flex-col items-center gap-8">
+          ${grouped[lessonId].sort((a,b)=>a.part-b.part).map(p=>`
+            <button class="disc bg-white shadow-lg rounded-full w-28 h-28 flex flex-col justify-center items-center
+                           hover:scale-105 transition"
+                    data-id="${lessonId}" data-part="${p.part}">
+              <span class="text-xl font-bold text-cyan-700">${p.part}</span>
+              <span class="text-[10px] text-gray-500 px-2 truncate max-w-[80%]">${p.content}</span>
+            </button>
+          `).join('')}
+        </div>
       `);
     });
 
-    /* connector ก่อนปุ่มแรกไม่ต้องมีเส้น */
-    map.firstElementChild.classList.remove('connector');
-
-    /* click –> เรียก getQuiz (init) */
-    map.querySelectorAll('button').forEach(btn=>{
-      btn.onclick = ()=>{
-        const part = btn.dataset.part;
-        location.href = `quiz.html?subject=${subj}&part=${part}&mode=init`;
+    /* ④ click –> quiz init */
+    wrap.querySelectorAll('.disc').forEach(b=>{
+      b.onclick = ()=>{
+        const id   = b.dataset.id;
+        const part = b.dataset.part;
+        location.href = `quiz.html?subject=${subj}&lesson=${id}&part=${part}&mode=init`;
       };
     });
 
