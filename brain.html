@@ -19,6 +19,19 @@
 
     /* line */
     .bf-line{position:absolute;left:50%;transform:translateX(-50%);width:2px;background:#93c5fd}
+
+    /* ──────  plate & line  ────── */
+.plate-wrap          {display:flex;flex-direction:column;align-items:center;gap:.4rem;position:relative}
+.plate-img           {width:86px;height:86px;background:url("https://i.postimg.cc/9Q00g2DS/image.png") center/cover no-repeat;
+                      display:flex;align-items:center;justify-content:center;
+                      font-size:.7rem;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);}
+.plate-wrap:hover    {transform:scale(1.06);transition:.18s}
+.plate-line          {position:absolute;left:50%;top:86px;width:2px;background:#93c5fd;height:38px;transform:translateX(-50%)}
+
+.chapter-bar         {width:100%;background:#bfdbfe;color:#1e3a8a;font-weight:700;
+                      padding:6px 10px;margin:32px 0 20px;border-radius:12px;display:flex;gap:10px;align-items:center}
+.chapter-bar span:first-child{background:#1e40af;color:#fff;font-size:.85rem;
+                              padding:2px 8px;border-radius:9999px}
   </style>
 </head>
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex flex-col">
@@ -99,37 +112,37 @@ async function loadMap(subj){
   }catch{ zone.innerHTML="<p class='text-center text-red-600'>โหลดข้อมูลบทไม่สำเร็จ</p>"; }
 }
 
-/* rows = [{chapter,part,content}] */
+/* ======  NEW renderMap  – vertical plates + chapter bar ====== */
 function renderMap(rows, zone){
-  zone.innerHTML="";          // clear
-  /* จัดหมวดตามบท */
-  const byChap={};
+  zone.innerHTML = "";                                  // ล้าง
+  const byChap = {};
   rows.forEach(r=>{
-     if(!byChap[r.chapter]) byChap[r.chapter]=[];
-     byChap[r.chapter].push(r);
+    if(!byChap[r.chapter]) byChap[r.chapter] = [];
+    byChap[r.chapter].push(r);
   });
-  const chapKeys = Object.keys(byChap).sort();         // ST001, ST002 …
 
-  chapKeys.forEach((cid,rowIdx)=>{
-     const parts = byChap[cid].sort((a,b)=>a.part-b.part);
-     parts.forEach((p,colIdx)=>{
-        const top  = rowIdx*160;
-        const left = colIdx*180;
+  /* เรียงบทและ Part */
+  Object.keys(byChap).sort().forEach(cid=>{
+    const parts = byChap[cid].sort((a,b)=>a.part-b.part);
 
-        zone.insertAdjacentHTML("beforeend",`
-          <div class="bf-plate absolute" style="top:${top}px;left:${left}px">
-            <div class="plate-circle">${p.content}</div>
-            <span class="text-xs text-blue-900">${cid}-P${p.part}</span>
-          </div>`);
+    /* ── CHAPTER BAR ── */
+    const chapterName = parts[0].content[0] || cid;     // ใช้ content แรกเป็นชื่อบท
+    zone.insertAdjacentHTML("beforeend",
+      `<div class="chapter-bar">
+         <span>${cid}</span>  ${chapterName}
+       </div>`);
 
-        /* เส้นแนวตั้งเพื่อเชื่อมไปแถวล่าง (แสดงใต้ column 0) */
-        if(colIdx===0 && rowIdx<chapKeys.length-1){
-           zone.insertAdjacentHTML("beforeend",
-             `<div class="bf-line" style="top:${top+120}px;height:40px;"></div>`);
-        }
-     });
+    /* ── PLATES ── */
+    parts.forEach((p,idx)=>{
+      const hasNext = idx < parts.length-1;
+      zone.insertAdjacentHTML("beforeend",`
+        <div class="plate-wrap">
+          <div class="plate-img">${p.content.join("<br>")}</div>
+          ${hasNext?'<div class="plate-line"></div>':''}
+        </div>
+      `);
+    });
   });
-  zone.style.height = `${chapKeys.length*160 + 60}px`;
 }
 
 /* ---------- Modal helper (ไม่แก้) ---------- */
