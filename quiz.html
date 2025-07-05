@@ -51,7 +51,8 @@ const userId    = user.no || '7';                    // เลขที่ผู
 const subjectId = localStorage.getItem('subjectId'); // ex. ST001
 const partNo    = localStorage.getItem('partNo');    // 1,2,…
 let   userLv    = +localStorage.getItem(`${subjectId}_lv`) || 0;
-
+let originalTotal = 0; 
+  
 /* ─────────── โหลดชุดข้อสอบ ─────────── */
 let quizzes = [], idx = 0, correctFirst = 0;
 (async () => {
@@ -98,7 +99,7 @@ function answer(isCorrect, btn, q) {
     fetch(`${apiUrl}?action=submitQuizResult&userId=${userId}` +
           `&subjectId=${subjectId}&quizId=${q.QuizId}&topic=${q.Topic}`);
   }
-
+  
   /* (2) เก็บสถานะไว้ในตัวโจทย์ เพื่อตรวจวนซ้ำ */
   q.isCorrect = isCorrect;
 
@@ -164,6 +165,9 @@ function finishQuiz() {
   if (perc >= 40) {
     fetch(`${apiUrl}?action=markPartDone&subjectId=${subjectId}&partNo=${partNo}&no=${userId}`);
   }
+
+  /* บวก EXP สะสมในชีท USERS */
+  fetch(`${apiUrl}?action=addExp&no=${userId}&exp=${gainedExp}`);
 
   document.getElementById('btnBack').onclick = () => {
     window.location.href = 'brainfood.html';
