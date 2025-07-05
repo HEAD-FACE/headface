@@ -117,8 +117,8 @@ function renderMap(rows, zone){
   zone.innerHTML = "";                                  // ล้าง
   const byChap = {};
   rows.forEach(r=>{
-    if(!byChap[r.chapter]) byChap[r.chapter] = [];
-    byChap[r.chapter].push(r);
+    if(!byChap[j.chapter]) byChap[j.chapter] = [];
+    byChap[j.chapter].push(r);
   });
 
   /* เรียงบทและ Part */
