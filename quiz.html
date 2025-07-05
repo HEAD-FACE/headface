@@ -37,9 +37,9 @@ tailwind.config={theme:{extend:{colors:{primary:'#3B82F6',accent:'#8B5CF6'}}}}
 </div>
 
 <script>
-const user = 
 const apiUrl = 'https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec';
-const userId = localStorage.getItem('no') || '17';              // ใช้เลขที่เป็น userId ก็ได้
+const user = JSON.parse(localStorage.getItem("user"));
+const userId = user.no || '7';   // เลขที่
 const subjectId = localStorage.getItem('subjectId');            // ST001
 const partNo    = localStorage.getItem('partNo');               // 1
 let   userLv    = +localStorage.getItem(`${subjectId}_lv`)||0;  // lv ต่อบท
