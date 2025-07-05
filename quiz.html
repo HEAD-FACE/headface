@@ -52,6 +52,7 @@ const subjectId = localStorage.getItem('subjectId'); // ex. ST001
 const partNo    = localStorage.getItem('partNo');    // 1,2,…
 let   userLv    = +localStorage.getItem(`${subjectId}_lv`) || 0;
 let originalTotal = 0; 
+const alreadyDone = localStorage.getItem('alreadyDone') === 'true';
   
 /* ─────────── โหลดชุดข้อสอบ ─────────── */
 let quizzes = [], idx = 0, correctFirst = 0;
@@ -138,14 +139,15 @@ function finishQuiz() {
   const total = quizzes.length;
   const exp   = total * 3;
   const perc  = Math.round((correctFirst / total) * 100);
-  let bonus   = 0;
+  let bonus   = 1;
+  if (!alreadyDone) {
   if (perc > 79)       bonus = 0.5;
   else if (perc > 59)  bonus = 0.4;
   else if (perc > 39)  bonus = 0.3;
   else if (perc > 19)  bonus = 0.2;
   else if (perc > 0)   bonus = 0.1;
   const gained = Math.round(exp + exp * bonus);
-
+  }
   quizArea.innerHTML = `
     <div class="bg-white p-6 rounded shadow max-w-md text-center">
       <h2 class="font-bold text-xl mb-2">จบควิส!</h2>
