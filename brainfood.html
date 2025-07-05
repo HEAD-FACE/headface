@@ -115,6 +115,15 @@
   const tplBridge = document.getElementById('tpl-bridge').content;
   const mapArea   = document.getElementById('mapArea');
 
+  /* ❶ helper ใช้ซ้ำ – บังคับเป็น string, trim, split วรรค/คอมมา */
+function isDone(val){
+  const list = String(val ?? '')            // cast → string
+                .trim()                     // ตัดช่องว่างหัว-ท้าย
+                .split(/[\s,]+/)            // แยกด้วย space หรือ ,
+                .filter(Boolean);           // กำจัดช่องว่างล้วน
+  return list.includes(String(userNo));     // เทียบแบบ string
+}
+    
   function renderMap(chapters){
     mapArea.innerHTML='';
     chapters.forEach((chap,idx)=>{
@@ -134,7 +143,7 @@
         const img = node.querySelector('img');
         const cap = node.querySelector('span');
 
-        const done = (p.done_no??'').split(/\s+/).includes(userNo);
+        const done = isDone(p.done_no)
         img.src   = done ? randomDoneImg() : dishPending;
         img.classList.toggle('opacity-30',!done);
         cap.textContent=`Part ${p.part_no}`;
