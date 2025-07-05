@@ -6,29 +6,27 @@
   <title>Brain Food – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style type="text/tailwindcss">
-    /* ░░  ส่วนเดิม  ░░ */
+    /* ░░  ของเดิม  ░░ */
     .no-scroll::-webkit-scrollbar{display:none}
     .no-scroll{scrollbar-width:none;-ms-overflow-style:none}
 
-    /* ░░  จานใหม่  ░░ */
-    .plate-img-new{
+    /* ░░  จาน  ░░ */
+    .plate-img{
       @apply w-20 h-20 bg-no-repeat bg-center bg-cover rounded-full text-xs
              flex items-center justify-center font-semibold text-white;
       background-image:url("https://i.postimg.cc/9Q00g2DS/image.png");
       text-shadow:0 1px 2px rgb(0 0 0 / .3);
     }
-    .plate-img-new:hover{transform:scale(1.06);transition:.18s}
+    .plate-img:hover{transform:scale(1.06);transition:.18s}
 
-    /* ░░  เส้นแนวนอน  ░░ */
-    .link-h{
-      @apply h-1 bg-blue-300 rounded-md;
-      width:70px;            /* ← ปรับความยาวตามชอบ */
-      flex-shrink:0;
-    }
+    /* ░░  เส้นเชื่อม  ░░ */
+    .link-h{ @apply h-1 w-[70px] bg-blue-300 rounded-md flex-shrink-0 }   /* แนวนอน */
+    .link-v{ @apply w-1 h-14 bg-blue-300 rounded-md flex-shrink-0 }       /* แนวตั้ง */
 
     /* ░░  แถบบท  ░░ */
     .chapter-bar{
-      @apply w-full bg-blue-200 text-blue-900 font-bold py-1.5 px-4 rounded-xl flex items-center gap-3 mb-6 mt-8;
+      @apply w-full bg-blue-200 text-blue-900 font-bold py-1.5 px-4 rounded-xl
+             flex items-center justify-between gap-3 mb-4 mt-8;
     }
     .chapter-bar span{ @apply bg-blue-900 text-white px-2 rounded-full text-sm }
   </style>
@@ -101,7 +99,7 @@ async function loadMap(subj){
   }catch{ zone.innerHTML="<p class='text-center text-red-600'>โหลดข้อมูลบทไม่สำเร็จ</p>"; }
 }
 
-/* ---------- renderMap (แนวนอน + เส้น) ---------- */
+/* ---------- renderMap (แนว *ตั้ง*) ---------- */
 function renderMap(rows, zone){
   zone.innerHTML="";
 
@@ -115,21 +113,30 @@ function renderMap(rows, zone){
   Object.keys(byChap).sort().forEach(cid=>{
      const parts = byChap[cid].sort((a,b)=>a.part-b.part);
 
-     /* BAR */
+     /* BAR + ปุ่มข้าม */
      const chapLabel = parts[0].content.split(",")[0] || cid;
      zone.insertAdjacentHTML("beforeend",
-       `<div class="chapter-bar"><span>${cid}</span>${chapLabel}</div>`);
+       `<div class="chapter-bar">
+          <div class="flex items-center gap-2"><span>${cid}</span>${chapLabel}</div>
+          <button class="skip-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-0.5 rounded text-sm"
+                  data-chap="${cid}">ข้ามไปบทนี้</button>
+        </div>`);
 
-     /* ROW (จาน + เส้น) */
-     const rowEl = document.createElement("div");
-     rowEl.className="chapter-row flex items-center justify-start gap-4 mb-8";
+     /* COLUMN : จาน + เส้นแนวตั้ง */
+     const colEl = document.createElement("div");
+     colEl.className="flex flex-col items-center mb-4";
      parts.forEach((p,idx)=>{
-        rowEl.insertAdjacentHTML("beforeend",`
-          <div class="plate-img-new">${p.part}</div>
-          ${idx<parts.length-1?'<div class="link-h"></div>':''}
+        colEl.insertAdjacentHTML("beforeend",`
+          <div class="plate-img">${p.part}</div>
+          ${idx<parts.length-1?'<div class="link-v"></div>':''}
         `);
      });
-     zone.appendChild(rowEl);
+     zone.appendChild(colEl);
+  });
+
+  /* ---- event skip button (ตัวอย่าง) ---- */
+  zone.querySelectorAll(".skip-btn").forEach(btn=>{
+     btn.onclick = ()=> alert(`จะข้ามไปบท ${btn.dataset.chap} ต่อได้เลย ‼️ (ผูกฟังก์ชันเพิ่มได้)` );
   });
 }
 
