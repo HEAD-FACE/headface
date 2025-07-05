@@ -112,38 +112,39 @@ async function loadMap(subj){
   }catch{ zone.innerHTML="<p class='text-center text-red-600'>โหลดข้อมูลบทไม่สำเร็จ</p>"; }
 }
 
-/* ======  NEW renderMap  – vertical plates + chapter bar ====== */
+/* === FIXED renderMap – เวอร์ชันใช้งานจริง  === */
 function renderMap(rows, zone){
-  zone.innerHTML = "";                                  // ล้าง
+  zone.innerHTML = "";                                       // ล้างจอ
+
+  /* -- จัดกลุ่มตามบท -- */
   const byChap = {};
   rows.forEach(r=>{
-    if(!byChap[j.chapter]) byChap[j.chapter] = [];
-    byChap[j.chapter].push(r);
+    if(!byChap[r.chapter]) byChap[r.chapter] = [];
+    byChap[r.chapter].push(r);                               // ← r (ไม่ใช่ j!)
   });
 
-  /* เรียงบทและ Part */
+  /* -- วาดทีละบท -- */
   Object.keys(byChap).sort().forEach(cid=>{
     const parts = byChap[cid].sort((a,b)=>a.part-b.part);
 
-    /* ── CHAPTER BAR ── */
-    const chapterName = parts[0].content[0] || cid;     // ใช้ content แรกเป็นชื่อบท
+    /* ░░  BAR ชื่อบท ░░ */
+    const chapName = parts[0].content.split(",")[0] || cid;  // ใช้เนื้อหาตัวแรกเป็นชื่อบท
     zone.insertAdjacentHTML("beforeend",
       `<div class="chapter-bar">
-         <span>${cid}</span>  ${chapterName}
+         <span>${cid}</span> ${chapName}
        </div>`);
 
-    /* ── PLATES ── */
+    /* ░░  จาน + เส้นต่อ ░░ */
     parts.forEach((p,idx)=>{
       const hasNext = idx < parts.length-1;
       zone.insertAdjacentHTML("beforeend",`
         <div class="plate-wrap">
-          <div class="plate-img">${p.content.join("<br>")}</div>
-          ${hasNext?'<div class="plate-line"></div>':''}
+          <div class="plate-img">${p.part}</div>
+          ${hasNext ? '<div class="plate-line"></div>' : ''}
         </div>
       `);
     });
   });
-}
 
 /* ---------- Modal helper (ไม่แก้) ---------- */
 function openModal(html){
