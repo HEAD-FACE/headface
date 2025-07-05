@@ -96,10 +96,10 @@ function answer(isCorrect, btn, q) {
   [...btn.parentNode.children].forEach(b => b.disabled = true);
 
   /* (1) บันทึกลง Quiz_Log เฉพาะตอน “ผิด” */
-  if (!isCorrect) {
-    fetch(`${apiUrl}?action=submitQuizResult&userId=${userId}` +
-          `&subjectId=${subjectId}&quizId=${q.QuizId}&topic=${q.Topic}`);
-  }
+  /* ใน answer() เปลี่ยนเป็น */
+  fetch(`${apiUrl}?action=submitQuizResult` +
+      `&userId=${userId}&subjectId=${subjectId}` +
+      `&topic=${q.Topic}&correct=${isCorrect}`);
   
   /* (2) เก็บสถานะไว้ในตัวโจทย์ เพื่อตรวจวนซ้ำ */
   q.isCorrect = isCorrect;
