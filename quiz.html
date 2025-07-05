@@ -167,7 +167,7 @@ function finishQuiz() {
   }
 
   /* บวก EXP สะสมในชีท USERS */
-  fetch(`${apiUrl}?action=addExp&no=${userId}&exp=${gainedExp}`);
+  fetch(`${apiUrl}?action=addExp&no=${userId}&exp=${gained}`);
 
   document.getElementById('btnBack').onclick = () => {
     window.location.href = 'brainfood.html';
