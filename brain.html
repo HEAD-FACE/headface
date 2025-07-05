@@ -1,71 +1,137 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Brain-Food | เลือกวิชา</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brain Food – HEAD FACE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* ซ่อน scrollbar */
+.hide-scroll::-webkit-scrollbar{display:none}
+.hide-scroll{scrollbar-width:none;-ms-overflow-style:none}
+</style>
 </head>
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex flex-col">
 
+<!-- ───────────── HEADER ───────────── -->
 <header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
-  <h1 class="text-xl font-bold text-blue-700">Brain-Food</h1>
-  <a href="home.html"
-     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
-     กลับหน้าหลัก
+  <h1 class="text-xl font-bold text-blue-700">Brain Food (BETA)</h1>
+  <a href="home.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
+    กลับหน้าหลัก
   </a>
 </header>
 
-<main class="flex-1 flex flex-col items-center p-4">
-  <h2 class="text-lg font-semibold text-blue-800 my-4">เลือกวิชาเพื่อเริ่มทำคอร์ส</h2>
+<!-- ───────────── SUBJECT BAR ───────────── -->
+<section class="relative bg-white/70 shadow-inner">
+  <!-- ปุ่มเลื่อน -->
+  <button id="sb-left"
+          class="absolute left-0 top-1/2 -translate-y-1/2 px-2 py-1 bg-white/80 rounded-full shadow hidden">
+    ‹
+  </button>
+  <div id="subBar" class="flex gap-3 overflow-x-auto hide-scroll py-3 px-10 scroll-smooth"></div>
+  <button id="sb-right"
+          class="absolute right-0 top-1/2 -translate-y-1/2 px-2 py-1 bg-white/80 rounded-full shadow hidden">
+    ›
+  </button>
+</section>
 
-  <div id="subject-grid"
-       class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full max-w-3xl">
-    <!-- เติมด้วย JS -->
+<!-- ───────────── MAP AREA ───────────── -->
+<main class="flex-1 flex flex-col items-center py-8 px-4">
+  <div id="loader" class="hidden">
+    <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
   </div>
+  <div id="mapBox" class="space-y-8 w-full max-w-md"></div>
 </main>
 
-<div id="modal-root"></div>
-
 <script>
-const API  = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
-const ICON = code => `https://dummyimage.com/100x100/1e40af/ffffff&text=${code}`;
+const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+const loader = document.getElementById("loader");
+const subBar = document.getElementById("subBar");
+const mapBox = document.getElementById("mapBox");
 
-function openModal(msg){
-  document.getElementById("modal-root").innerHTML =
-   `<div id="mask" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center space-y-4">
-        <p>${msg}</p>
-        <button onclick="document.getElementById('modal-root').innerHTML=''"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl">
-          ปิด
-        </button>
-      </div>
-    </div>`;
-}
+/* ─── utils ─── */
+const show = el => el.classList.remove("hidden");
+const hide = el => el.classList.add("hidden");
 
+/* ─── ① โหลดชื่อวิชา ─── */
 (async ()=>{
   try{
-    const j = await fetch(`${API}?action=listSubjects`).then(r=>r.json());
-    if(j.status!=="success") throw 'error';
-
-    const grid = document.getElementById('subject-grid');
-    grid.innerHTML = j.subjects.map(s=>`
-      <button data-code="${s.code}"
-              class="bg-white/80 hover:bg-white shadow rounded-2xl p-4 flex flex-col items-center gap-2
-                     transition hover:scale-105">
-        <img src="${ICON(s.code)}" alt="${s.code}" class="w-16 h-16 rounded-full shadow">
-        <span class="font-semibold text-blue-800 text-sm">${s.name}</span>
-      </button>
-    `).join("");
-
-    grid.querySelectorAll('button').forEach(btn=>{
-      btn.onclick = ()=> location.href =
-        `course-map.html?subject=${btn.dataset.code}`;
-    });
-
-  }catch(e){ console.error(e); openModal("โหลดรายวิชาไม่สำเร็จ"); }
+    const j = await fetch(`${API}?action=list_subjects`).then(r=>r.json());
+    if(j.status!=="success") throw "";
+    renderSubjects(j.subjects);
+  }catch{ alert("โหลดรายชื่อวิชาไม่สำเร็จ"); }
 })();
+
+/* ─── สร้างปุ่มวิชา ─── */
+function renderSubjects(subs){
+  subBar.innerHTML = subs.map((s,i)=>`
+    <button class="sub-btn whitespace-nowrap px-4 py-2 rounded-full shadow
+                   ${i===0?'bg-blue-600 text-white':'bg-white'}"
+            data-code="${s.code}">
+      ${s.name}
+    </button>`).join("");
+
+  // ซ่อน/โชว์ปุ่มเลื่อนถ้าของยาวกว่า viewport
+  const checkScrollBtn = ()=>{
+    const need = subBar.scrollWidth > subBar.clientWidth;
+    document.getElementById("sb-left").classList.toggle("hidden", !need);
+    document.getElementById("sb-right").classList.toggle("hidden", !need);
+  };
+  window.addEventListener("resize", checkScrollBtn); checkScrollBtn();
+
+  // เลือกแรกสุดโดยอัตโนมัติ
+  chooseSubject(subs[0].code);
+  /* bind click */
+  subBar.querySelectorAll(".sub-btn").forEach(btn=>{
+     btn.onclick = ()=>{
+       subBar.querySelectorAll(".sub-btn").forEach(b=>b.className=
+         "sub-btn whitespace-nowrap px-4 py-2 rounded-full shadow bg-white");
+       btn.classList.add("bg-blue-600","text-white");
+       chooseSubject(btn.dataset.code);
+     };
+  });
+}
+
+/* ─── ปุ่มเลื่อนแถบ ─── */
+document.getElementById("sb-left").onclick  = ()=> subBar.scrollBy({left:-150,behavior:"smooth"});
+document.getElementById("sb-right").onclick = ()=> subBar.scrollBy({left:150,behavior:"smooth"});
+
+/* ─── ② เมื่อเลือกวิชา ─── */
+async function chooseSubject(subj){
+  mapBox.innerHTML = ""; show(loader);
+  try{
+    const j = await fetch(`${API}?action=listPartsRaw&subject=${subj}`).then(r=>r.json());
+    if(j.status!=="success"||!j.rows.length) throw "";
+    renderMap(j.rows);
+  }catch{ mapBox.innerHTML = "<p class='text-red-600'>โหลดข้อมูลบทไม่สำเร็จ</p>"; }
+  hide(loader);
+}
+
+/* ─── ③ วาด Map ─── */
+function renderMap(rows){
+  // รวมตาม part_no
+  const parts = {};
+  rows.forEach(r=>{
+     if(!parts[r.part]) parts[r.part]=[];
+     parts[r.part].push(r.content);
+  });
+
+  // สลับซ้ายขวาแบบ Duolingo
+  const html = Object.keys(parts).sort((a,b)=>a-b).map((p,i)=>{
+     const side = i%2===0 ? "items-start" : "items-end";
+     return `
+       <div class="flex flex-col ${side} relative">
+         ${i>0?'<div class="absolute w-1 bg-blue-300 h-full top-0'+(i%2===0?' left-4':' right-4')+'"></div>':''}
+         <div class="bg-white rounded-full w-28 h-28 flex items-center justify-center shadow-lg z-10">
+           <span class="text-blue-700 font-bold text-center leading-tight text-sm">
+             Part ${p}<br>${parts[p].join("<br>")}
+           </span>
+         </div>
+       </div>`;
+  }).join("");
+
+  mapBox.innerHTML = html;
+}
 </script>
 </body>
 </html>
