@@ -85,7 +85,7 @@ async function loadMap(subj){
   zone.innerHTML = "<p class='text-center text-blue-700'>กำลังโหลด…</p>";
 
   try{
-     const j = await fetch(`${API}?action=listPartsBySubject&subj=${subj}`).then(r=>r.json());
+     const j = await fetch(`${API}?action=listParts&subj=${subj}`).then(r=>r.json());
      if(j.status!=="success" || !j.chapters?.length) throw "no data";
 
      /* แปลงข้อมูลเป็น rows [{chapter,part,content}] */
