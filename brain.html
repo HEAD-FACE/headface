@@ -1,137 +1,150 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Brain Food – HEAD FACE</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 /* ซ่อน scrollbar */
-.hide-scroll::-webkit-scrollbar{display:none}
-.hide-scroll{scrollbar-width:none;-ms-overflow-style:none}
+.no-scroll::-webkit-scrollbar{display:none}
+.no-scroll{scrollbar-width:none;-ms-overflow-style:none}
+
+/* จาน / node */
+.bf-plate{
+  @apply flex flex-col items-center gap-2 cursor-pointer transition transform;
+}
+.bf-plate:hover{transform:scale(1.08)}
+.bf-plate.active .plate-circle{ @apply ring-4 ring-blue-400; }
+
+/* เส้นเชื่อม */
+.bf-line{
+  @apply absolute left-1/2 -translate-x-1/2 top-[40px] w-px bg-blue-300;
+}
+/* ขนาดวงกลม */
+.plate-circle{
+  @apply w-24 h-24 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg;
+}
 </style>
 </head>
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex flex-col">
 
-<!-- ───────────── HEADER ───────────── -->
+<!-- Header -->
 <header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
-  <h1 class="text-xl font-bold text-blue-700">Brain Food (BETA)</h1>
+  <h1 class="text-xl font-bold text-blue-700">Brain Food</h1>
   <a href="home.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
     กลับหน้าหลัก
   </a>
 </header>
 
-<!-- ───────────── SUBJECT BAR ───────────── -->
-<section class="relative bg-white/70 shadow-inner">
-  <!-- ปุ่มเลื่อน -->
-  <button id="sb-left"
-          class="absolute left-0 top-1/2 -translate-y-1/2 px-2 py-1 bg-white/80 rounded-full shadow hidden">
-    ‹
-  </button>
-  <div id="subBar" class="flex gap-3 overflow-x-auto hide-scroll py-3 px-10 scroll-smooth"></div>
-  <button id="sb-right"
-          class="absolute right-0 top-1/2 -translate-y-1/2 px-2 py-1 bg-white/80 rounded-full shadow hidden">
-    ›
-  </button>
+<!-- Subject bar -->
+<section class="bg-white/70 pt-4 pb-2 shadow-inner">
+  <div id="subjBar" class="flex gap-4 overflow-x-auto no-scroll px-6"></div>
 </section>
 
-<!-- ───────────── MAP AREA ───────────── -->
-<main class="flex-1 flex flex-col items-center py-8 px-4">
-  <div id="loader" class="hidden">
-    <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-  </div>
-  <div id="mapBox" class="space-y-8 w-full max-w-md"></div>
+<!-- Course Map -->
+<main class="flex-1 overflow-auto p-6">
+  <div id="mapZone" class="relative mx-auto max-w-lg"></div>
 </main>
 
+<!-- Modal -->
+<div id="modal-root"></div>
+
 <script>
+/* ---------------- CONFIG ---------------- */
 const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
-const loader = document.getElementById("loader");
-const subBar = document.getElementById("subBar");
-const mapBox = document.getElementById("mapBox");
 
-/* ─── utils ─── */
-const show = el => el.classList.remove("hidden");
-const hide = el => el.classList.add("hidden");
+/* ใช้แมปชื่อ (thai) เมื่อตัว API ยังไม่ส่ง name มา */
+const SUBJ_NAMES = {
+  ST:"วิทยาศาสตร์", ET:"ภาษาอังกฤษ", TH:"ภาษาไทย", MT:"คณิตศาสตร์",
+  SO:"สังคม", HE:"สุขศึกษา", PE:"พลศึกษา", HS:"ประวัติศาสตร์",
+  CH:"ภาษาจีน", ME:"คณิตสากล", SE:"วิทย์สากล", EN:"ENS",
+  SR:"เทคโนโลยี", SW:"วิทยาการคอมฯ", SD:"ออกแบบเว็บไซต์", AA:"การงานอาชีพ"
+};
 
-/* ─── ① โหลดชื่อวิชา ─── */
+/* ---------------- Subject Bar ---------------- */
 (async ()=>{
+  const bar = document.getElementById("subjBar");
   try{
-    const j = await fetch(`${API}?action=listSubjects`).then(r=>r.json());
-    if(j.status!=="success") throw "";
-    renderSubjects(j.subjects);
-  }catch{ alert("โหลดรายชื่อวิชาไม่สำเร็จ"); }
+     const j = await fetch(`${API}?action=listSubjects`).then(r=>r.json());
+     if(j.status!=="success") throw "";
+     const subs = j.subjects;                 // [{code,name?},...]
+     bar.innerHTML = subs.map(s=>{
+        const name = s.name || SUBJ_NAMES[s.code] || s.code;
+        return `<button data-code="${s.code}"
+                        class="subj-btn whitespace-nowrap px-4 py-2 bg-blue-100 rounded-xl
+                               hover:bg-blue-200">${name}</button>`;
+     }).join("");
+     // bind click
+     bar.querySelectorAll(".subj-btn").forEach(btn=>{
+        btn.onclick = ()=>{
+           bar.querySelectorAll(".subj-btn").forEach(b=>b.classList.remove("bg-blue-600","text-white","active"));
+           btn.classList.add("bg-blue-600","text-white","active");
+           loadMap(btn.dataset.code);
+        };
+     });
+     /* เลือกตัวแรกอัตโนมัติ */
+     bar.querySelector(".subj-btn")?.click();
+  }catch(e){ bar.innerHTML="<p class='text-red-600'>โหลดวิชาไม่สำเร็จ</p>"; }
 })();
 
-/* ─── สร้างปุ่มวิชา ─── */
-function renderSubjects(subs){
-  subBar.innerHTML = subs.map((s,i)=>`
-    <button class="sub-btn whitespace-nowrap px-4 py-2 rounded-full shadow
-                   ${i===0?'bg-blue-600 text-white':'bg-white'}"
-            data-code="${s.code}">
-      ${s.name}
-    </button>`).join("");
-
-  // ซ่อน/โชว์ปุ่มเลื่อนถ้าของยาวกว่า viewport
-  const checkScrollBtn = ()=>{
-    const need = subBar.scrollWidth > subBar.clientWidth;
-    document.getElementById("sb-left").classList.toggle("hidden", !need);
-    document.getElementById("sb-right").classList.toggle("hidden", !need);
-  };
-  window.addEventListener("resize", checkScrollBtn); checkScrollBtn();
-
-  // เลือกแรกสุดโดยอัตโนมัติ
-  chooseSubject(subs[0].code);
-  /* bind click */
-  subBar.querySelectorAll(".sub-btn").forEach(btn=>{
-     btn.onclick = ()=>{
-       subBar.querySelectorAll(".sub-btn").forEach(b=>b.className=
-         "sub-btn whitespace-nowrap px-4 py-2 rounded-full shadow bg-white");
-       btn.classList.add("bg-blue-600","text-white");
-       chooseSubject(btn.dataset.code);
-     };
-  });
-}
-
-/* ─── ปุ่มเลื่อนแถบ ─── */
-document.getElementById("sb-left").onclick  = ()=> subBar.scrollBy({left:-150,behavior:"smooth"});
-document.getElementById("sb-right").onclick = ()=> subBar.scrollBy({left:150,behavior:"smooth"});
-
-/* ─── ② เมื่อเลือกวิชา ─── */
-async function chooseSubject(subj){
-  mapBox.innerHTML = ""; show(loader);
+/* ---------------- Load & Render Map ---------------- */
+async function loadMap(subj){
+  const zone = document.getElementById("mapZone");
+  zone.innerHTML = "<p class='text-center text-blue-600'>กำลังโหลดบทเรียน…</p>";
   try{
-    const j = await fetch(`${API}?action=listParts&subject=${subj}`).then(r=>r.json());
-    if(j.status!=="success"||!j.rows.length) throw "";
-    renderMap(j.rows);
-  }catch{ mapBox.innerHTML = "<p class='text-red-600'>โหลดข้อมูลบทไม่สำเร็จ</p>"; }
-  hide(loader);
+     const j = await fetch(`${API}?action=listParts&subject=${subj}`).then(r=>r.json());
+     if(j.status!=="success" || !j.rows?.length) throw "";
+     drawMap(j.rows, zone);
+  }catch(e){
+     zone.innerHTML = "<p class='text-center text-red-600'>โหลดข้อมูลบทไม่สำเร็จ</p>";
+  }
 }
 
-/* ─── ③ วาด Map ─── */
-function renderMap(rows){
-  // รวมตาม part_no
+/* rws = [{id,part,content},…] */
+function drawMap(rows, zone){
+  zone.innerHTML = "";
+  /* รวมตาม part */
   const parts = {};
   rows.forEach(r=>{
      if(!parts[r.part]) parts[r.part]=[];
-     parts[r.part].push(r.content);
+     parts[r.part].push(r);
   });
+  const sortedParts = Object.keys(parts).sort((a,b)=>a-b);
 
-  // สลับซ้ายขวาแบบ Duolingo
-  const html = Object.keys(parts).sort((a,b)=>a-b).map((p,i)=>{
-     const side = i%2===0 ? "items-start" : "items-end";
-     return `
-       <div class="flex flex-col ${side} relative">
-         ${i>0?'<div class="absolute w-1 bg-blue-300 h-full top-0'+(i%2===0?' left-4':' right-4')+'"></div>':''}
-         <div class="bg-white rounded-full w-28 h-28 flex items-center justify-center shadow-lg z-10">
-           <span class="text-blue-700 font-bold text-center leading-tight text-sm">
-             Part ${p}<br>${parts[p].join("<br>")}
-           </span>
-         </div>
-       </div>`;
-  }).join("");
-
-  mapBox.innerHTML = html;
+  sortedParts.forEach((p,i)=>{
+      const items = parts[p];
+      items.forEach((item,idx)=>{
+        // node
+        zone.insertAdjacentHTML("beforeend",`
+          <div class="bf-plate absolute"
+               style="top:${i*160}px; left:${idx*180}px">
+            <div class="plate-circle bg-gradient-to-br from-blue-400 to-blue-600">${item.content}</div>
+            <span class="text-sm">${item.id}</span>
+          </div>
+        `);
+      });
+      // เส้นต่อตัวถัดไป (ถ้าไม่ใช่ part สุดท้าย)
+      if(i < sortedParts.length-1){
+        zone.insertAdjacentHTML("beforeend",`
+          <div class="bf-line" style="top:${i*160 + 120}px; height:40px;"></div>
+        `);
+      }
+  });
+  /* กำหนดความสูงให้ mapZone */
+  zone.style.height = `${sortedParts.length*160 + 40}px`;
 }
+
+/* ---------------- Modal helper (optional future use) ---------------- */
+function openModal(html){
+  document.getElementById("modal-root").innerHTML =
+    `<div id="mask" class="fixed inset-0 bg-black/40 z-[90] flex items-center justify-center">
+       <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">${html}</div></div>`;
+  document.getElementById("mask").onclick = e=>{
+    if(e.target.id==="mask") closeModal();
+  };
+}
+function closeModal(){ document.getElementById("modal-root").innerHTML=""; }
 </script>
 </body>
 </html>
