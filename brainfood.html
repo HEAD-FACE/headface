@@ -71,7 +71,8 @@
     'https://i.postimg.cc/d0YJGKcg/zip-6.png',
     'https://i.postimg.cc/D08h7v14/zip-7.png'
   ];
-  const userNo = localStorage.getItem('no') || '7';   // เลขที่
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userNo = ${user.no} || '7';   // เลขที่
 
   /* รายชื่อวิชา: [รหัส, ป้ายที่แสดง] */
   const subjects = [
