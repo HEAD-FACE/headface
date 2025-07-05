@@ -146,8 +146,9 @@ function finishQuiz() {
   else if (perc > 39)  bonus = 0.3;
   else if (perc > 19)  bonus = 0.2;
   else if (perc > 0)   bonus = 0.1;
-  const gained = Math.round(exp + exp * bonus);
   }
+  const gained = Math.round(exp + exp * bonus);
+  
   quizArea.innerHTML = `
     <div class="bg-white p-6 rounded shadow max-w-md text-center">
       <h2 class="font-bold text-xl mb-2">จบควิส!</h2>
