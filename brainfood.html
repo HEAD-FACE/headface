@@ -60,6 +60,7 @@
 
   <!-- ░░ JavaScript ░░ -->
   <script>
+  
   /************* ค่าคงที่ *************/
   const apiUrl      = 'https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec';
   const dishPending = 'https://i.postimg.cc/9Q00g2DS/image.png';         // ยังไม่ทำ
@@ -175,10 +176,12 @@ function isDone(val){
 
   /* --- เช็กจานก่อนหน้าเสร็จหรือยัง --- */
   function prevDone(parts,index){
-    if(index===0) return true;
-    const prev=parts[index-1];
-    return (prev.done_no??'').split(/\s+/).includes(userNo);
-  }
+  if(index===0) return true;
+  const prev=parts[index-1];
+  const list = (prev.done_no ?? '').trim().split(/\s+/).filter(Boolean);
+  console.log('prevDone check:', list, 'userNo:', userNo, 'result:', list.includes(String(userNo)));
+  return list.includes(String(userNo));
+}
 
   /* --- ไปหน้า quiz --- */
   function startQuiz(subjectId,partNo, done){
