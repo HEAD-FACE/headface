@@ -1,56 +1,44 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Brain Food – HEAD FACE</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style type="text/tailwindcss">
-    /* ซ่อน scrollbar */
+    /* ░░  ส่วนเดิม  ░░ */
     .no-scroll::-webkit-scrollbar{display:none}
     .no-scroll{scrollbar-width:none;-ms-overflow-style:none}
 
-    /* node | plate */
-    .bf-plate{display:flex;flex-direction:column;align-items:center;gap:.35rem;cursor:pointer;transition:transform .2s}
-    .bf-plate:hover{transform:scale(1.08)}
-    .plate-circle{width:4.5rem;height:4.5rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;
-                  @apply bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs font-semibold shadow-lg}
-    .bf-plate.active .plate-circle{box-shadow:0 0 0 4px rgba(96,165,250,.6)}
+    /* ░░  จานใหม่  ░░ */
+    .plate-img-new{
+      @apply w-20 h-20 bg-no-repeat bg-center bg-cover rounded-full text-xs
+             flex items-center justify-center font-semibold text-white;
+      background-image:url("https://i.postimg.cc/9Q00g2DS/image.png");
+      text-shadow:0 1px 2px rgb(0 0 0 / .3);
+    }
+    .plate-img-new:hover{transform:scale(1.06);transition:.18s}
 
-    /* line */
-    .bf-line{position:absolute;left:50%;transform:translateX(-50%);width:2px;background:#93c5fd}
+    /* ░░  เส้นแนวนอน  ░░ */
+    .link-h{
+      @apply h-1 bg-blue-300 rounded-md;
+      width:70px;            /* ← ปรับความยาวตามชอบ */
+      flex-shrink:0;
+    }
 
-    /* ──────  plate & line  ────── */
-.plate-wrap          {display:flex;flex-direction:column;align-items:center;gap:.4rem;position:relative}
-.plate-img           {width:86px;height:86px;background:url("https://i.postimg.cc/9Q00g2DS/image.png") center/cover no-repeat;
-                      display:flex;align-items:center;justify-content:center;
-                      font-size:.7rem;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);}
-.plate-wrap:hover    {transform:scale(1.06);transition:.18s}
-.plate-line          {position:absolute;left:50%;top:86px;width:2px;background:#93c5fd;height:38px;transform:translateX(-50%)}
-
-.chapter-bar         {width:100%;background:#bfdbfe;color:#1e3a8a;font-weight:700;
-                      padding:6px 10px;margin:32px 0 20px;border-radius:12px;display:flex;gap:10px;align-items:center}
-.chapter-bar span:first-child{background:#1e40af;color:#fff;font-size:.85rem;
-                              padding:2px 8px;border-radius:9999px}
-
-    /* --- fix plate-line position --- */
-.plate-wrap{position:relative}                 /* มีอยู่แล้ว แต่ให้ชัวร์ */
-.plate-line{
-  position:absolute;
-  left:50%;                /* กึ่งกลางรูปจาน */
-  top:86px;                /* จุดเริ่มเส้น = สูงเท่ารูปจาน 86px */
-  width:2px;
-  height:38px;             /* ความยาวเส้นระหว่างจาน (ปรับได้) */
-  background:#93c5fd;
-  transform:translateX(-50%);
-}
+    /* ░░  แถบบท  ░░ */
+    .chapter-bar{
+      @apply w-full bg-blue-200 text-blue-900 font-bold py-1.5 px-4 rounded-xl flex items-center gap-3 mb-6 mt-8;
+    }
+    .chapter-bar span{ @apply bg-blue-900 text-white px-2 rounded-full text-sm }
   </style>
 </head>
-<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex flex-col">
+
+<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen">
 
 <!-- ░░ Header ░░ -->
 <header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
-  <h1 class="text-xl font-bold text-blue-700">Brain Food</h1>
+  <h1 class="text-xl font-bold text-blue-700">Brain Food (BETA)</h1>
   <a href="home.html"
      class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">กลับหน้าหลัก</a>
 </header>
@@ -62,108 +50,97 @@
 
 <!-- ░░ COURSE MAP ░░ -->
 <main class="flex-1 overflow-auto p-6">
-  <div id="mapZone" class="relative mx-auto max-w-xl"></div>
+  <div id="mapZone" class="relative mx-auto max-w-2xl"></div>
 </main>
 
-<!-- modal (เผื่อใช้ภายหลัง) -->
 <div id="modal-root"></div>
 
 <script>
 /* ---------- CONFIG ---------- */
 const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
-
-/* fallback ชื่อวิชา */
-const SUBJ_NAMES = {
-  ST:"วิทยาศาสตร์", ET:"ภาษาอังกฤษ", TH:"ภาษาไทย", MT:"คณิตศาสตร์",
-  SO:"สังคมศึกษา", HE:"สุขศึกษา", PE:"พลศึกษา", HS:"ประวัติศาสตร์",
-  CH:"ภาษาจีน", ME:"คณิตสากล", SE:"วิทย์สากล", EN:"ENS",
-  SR:"เทคโนโลยี", SW:"วิทยาการคอมฯ", SD:"ออกแบบเว็บไซต์", AA:"การงานอาชีพ"
-};
+const SUBJ_NAMES = {ST:"วิทยาศาสตร์",ET:"ภาษาอังกฤษ",TH:"ภาษาไทย",MT:"คณิตศาสตร์",
+SO:"สังคมศึกษา",HE:"สุขศึกษา",PE:"พลศึกษา",HS:"ประวัติศาสตร์",CH:"ภาษาจีน",ME:"คณิตสากล",
+SE:"วิทย์สากล",EN:"ENS",SR:"เทคโนโลยี",SW:"วิทยาการคอมฯ",SD:"ออกแบบเว็บไซต์",AA:"การงานอาชีพ"};
 
 /* ---------- SUBJECT BAR ---------- */
 (async()=>{
   const bar = document.getElementById("subjBar");
   try{
      const j = await fetch(`${API}?action=listSubjects`).then(r=>r.json());
-     if(j.status!=="success") throw "fail";
+     if(j.status!=="success") throw 0;
      bar.innerHTML = j.subjects.map(s=>{
         const name = s.name || SUBJ_NAMES[s.code] || s.code;
-        return `<button data-code="${s.code}"
-                   class="subj-btn whitespace-nowrap px-4 py-2 bg-blue-100 rounded-xl hover:bg-blue-200">
-                   ${name}</button>`;
+        return `<button class="subj-btn whitespace-nowrap px-4 py-1 bg-blue-100 rounded-xl hover:bg-blue-200"
+                        data-code="${s.code}">${name}</button>`;
      }).join("");
-     /* เลือกวิชา */
      bar.querySelectorAll(".subj-btn").forEach(btn=>{
-        btn.onclick = ()=>{
-           bar.querySelectorAll(".subj-btn").forEach(b=>b.classList.remove("bg-blue-600","text-white"));
-           btn.classList.add("bg-blue-600","text-white");
-           loadMap(btn.dataset.code);
-        };
+       btn.onclick = ()=>{
+         bar.querySelectorAll(".subj-btn").forEach(b=>b.classList.remove("bg-blue-600","text-white"));
+         btn.classList.add("bg-blue-600","text-white");
+         loadMap(btn.dataset.code);
+       };
      });
-     bar.querySelector(".subj-btn")?.click(); // auto load วิชาแรก
-  }catch{ bar.innerHTML = "<p class='text-red-600'>โหลดวิชาไม่สำเร็จ</p>"; }
+     bar.querySelector(".subj-btn")?.click();
+  }catch{ bar.innerHTML="<p class='text-red-600'>โหลดวิชาไม่สำเร็จ</p>"; }
 })();
 
 /* ---------- LOAD & DRAW MAP ---------- */
 async function loadMap(subj){
   const zone = document.getElementById("mapZone");
   zone.innerHTML = "<p class='text-center text-blue-700'>กำลังโหลด…</p>";
-
   try{
      const j = await fetch(`${API}?action=listParts&subj=${subj}`).then(r=>r.json());
-     if(j.status!=="success" || !j.chapters?.length) throw "no data";
+     if(j.status!=="success"||!j.chapters?.length) throw 0;
 
-     /* แปลงข้อมูลเป็น rows [{chapter,part,content}] */
+     /* flatten → rows */
      const rows=[];
      j.chapters.forEach(ch=>{
-        ch.parts.forEach(p=>{
-            rows.push({ chapter:ch.id, part:p.no, content:p.content.join(", ") });
-        });
+        ch.parts.forEach(p=> rows.push({ chapter:ch.id, part:p.no, content:p.content.join(", ") }) );
      });
-     renderMap(rows, zone);
+     renderMap(rows,zone);
   }catch{ zone.innerHTML="<p class='text-center text-red-600'>โหลดข้อมูลบทไม่สำเร็จ</p>"; }
 }
 
-/* === FIXED renderMap – เวอร์ชันใช้งานจริง  === */
+/* ---------- renderMap (แนวนอน + เส้น) ---------- */
 function renderMap(rows, zone){
-  zone.innerHTML = "";                                       // ล้างจอ
+  zone.innerHTML="";
 
-  /* -- จัดกลุ่มตามบท -- */
-  const byChap = {};
+  /* group by chapter */
+  const byChap={};
   rows.forEach(r=>{
-    if(!byChap[r.chapter]) byChap[r.chapter] = [];
-    byChap[r.chapter].push(r);                               // ← r (ไม่ใช่ j!)
+     if(!byChap[r.chapter]) byChap[r.chapter]=[];
+     byChap[r.chapter].push(r);
   });
 
-  /* -- วาดทีละบท -- */
   Object.keys(byChap).sort().forEach(cid=>{
-    const parts = byChap[cid].sort((a,b)=>a.part-b.part);
+     const parts = byChap[cid].sort((a,b)=>a.part-b.part);
 
-    /* ░░  BAR ชื่อบท ░░ */
-    const chapName = parts[0].content.split(",")[0] || `บทที่ ${cid.replace(/\D+/g,"")}`;
-zone.insertAdjacentHTML("beforeend",
-  `<div class="chapter-bar">${chapName}</div>`);
+     /* BAR */
+     const chapLabel = parts[0].content.split(",")[0] || cid;
+     zone.insertAdjacentHTML("beforeend",
+       `<div class="chapter-bar"><span>${cid}</span>${chapLabel}</div>`);
 
-    /* ░░  จาน + เส้นต่อ ░░ */
-    parts.forEach((p,idx)=>{
-      const hasNext = idx < parts.length-1;
-      zone.insertAdjacentHTML("beforeend",`
-        <div class="plate-wrap">
-          <div class="plate-img">${p.part}</div>
-          ${hasNext ? '<div class="plate-line"></div>' : ''}
-        </div>
-      `);
-    });
+     /* ROW (จาน + เส้น) */
+     const rowEl = document.createElement("div");
+     rowEl.className="chapter-row flex items-center justify-start gap-4 mb-8";
+     parts.forEach((p,idx)=>{
+        rowEl.insertAdjacentHTML("beforeend",`
+          <div class="plate-img-new">${p.part}</div>
+          ${idx<parts.length-1?'<div class="link-h"></div>':''}
+        `);
+     });
+     zone.appendChild(rowEl);
   });
 }
-/* ---------- Modal helper (ไม่แก้) ---------- */
+
+/* ---------- Modal helper (ยังเดิม) ---------- */
 function openModal(html){
   document.getElementById("modal-root").innerHTML =
     `<div id="mask" class="fixed inset-0 bg-black/40 z-[90] flex items-center justify-center">
        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">${html}</div></div>`;
-  document.getElementById("mask").onclick = e=>{ if(e.target.id==="mask") closeModal(); };
+  document.getElementById("mask").onclick=e=>{if(e.target.id==="mask")closeModal()};
 }
-function closeModal(){ document.getElementById("modal-root").innerHTML=""; }
+function closeModal(){document.getElementById("modal-root").innerHTML="";}
 </script>
 </body>
 </html>
