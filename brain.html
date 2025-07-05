@@ -93,7 +93,7 @@ async function loadMap(subj){
   const zone = document.getElementById("mapZone");
   zone.innerHTML = "<p class='text-center text-blue-600'>กำลังโหลดบทเรียน…</p>";
   try{
-     const j = await fetch(`${API}?action=listParts&subject_id=${subj}`).then(r=>r.json());
+     const j = await fetch(`${API}?action=listParts&subj=${subj}`).then(r=>r.json());
      if(j.status!=="success" || !j.rows?.length) throw "";
      drawMap(j.rows, zone);
   }catch(e){
