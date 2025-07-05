@@ -84,7 +84,7 @@ function answer(isCorrect,btn,q){
   btn.classList.add(isCorrect?'bg-green-200':'bg-red-200');
   [...btn.parentNode.children].forEach(b=>b.disabled=true);
 
-  if(!isCorect){
+  if(!isCorrect){
      // บันทึกลง GAS
   fetch(`${apiUrl}?action=submitQuizResult&userId=${userId}&subjectId=${subjectId}&quizId=${q.QuizId}&topic=${q.Topic}&correct=${isCorrect}`);
 
