@@ -1,0 +1,111 @@
+<!DOCTYPE html><html lang="th"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quiz – Brain Food</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@keyframes slideIn{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}
+.bounce{animation:slideIn .5s ease-out}
+.shake{animation:shake .6s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+</style></head>
+<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex flex-col">
+
+<header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
+ <h1 class="text-lg font-bold text-blue-700" id="hdr">Quiz</h1>
+ <button onclick="if(confirm('ออกจาก Quiz ?'))location.href='brain.html'"
+         class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">ออก</button>
+</header>
+
+<main class="flex-1 flex items-center justify-center p-4">
+ <div id="box" class="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6 text-center min-h-[22rem]">
+   กำลังโหลด…
+ </div>
+</main>
+
+<script>
+const API  = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
+const p    = new URLSearchParams(location.search);
+const subj = p.get('subj');          // ST
+const part = p.get('part');          // 1
+const user = JSON.parse(localStorage.getItem('user')||'null');
+if(!user){ alert('โปรด login'); location.href='index.html'; }
+
+let quiz=[], idx=0, firstRound=true, wrongPool=[];
+let currentLv=0;
+
+(async()=>{
+  const j = await fetch(`${API}?action=get_quiz&subj=${subj}&part=${part}&no=${user.no}`)
+                   .then(r=>r.json()).catch(()=>({status:'error'}));
+  if(j.status!=='success'){ alert('โหลด quiz ไม่ได้'); location.href='brain.html'; return; }
+
+  quiz = j.quiz; currentLv=j.currentLv;
+  document.getElementById('hdr').textContent = `${subj}-${part} (LV ${currentLv})`;
+  render();
+})();
+
+function render(){
+  if(idx>=quiz.length){ summary(); return; }
+  const q = quiz[idx];
+  document.getElementById('box').innerHTML = `
+     <h2 class="text-blue-700 font-bold mb-2">ข้อ ${idx+1} / ${quiz.length}</h2>
+     ${q.imgQ?`<img src="${q.imgQ}" class="mx-auto max-h-52 object-contain mb-3">`:""}
+     <p class="mb-4 text-left">${q.q}</p>
+     <div id="choiceBox" class="space-y-2">${q.choice.map((c,i)=>`
+        <button data-i="${i}"
+          class="w-full text-left px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 bounce">
+          ${String.fromCharCode(0x0E01+i)}. ${c}
+        </button>`).join('')}</div>`;
+  document.querySelectorAll('#choiceBox button').forEach(b=>b.onclick=select);
+}
+
+function select(e){
+  const sel = +e.currentTarget.dataset.i;
+  const q   = quiz[idx];
+  const box = document.getElementById('choiceBox');
+  box.querySelectorAll('button').forEach(b=>b.disabled=true);
+
+  const ok  = sel===q.ans;
+  if(ok){
+     e.currentTarget.classList.add('bg-green-500','text-white');
+     toast('ถูกต้อง!','green');
+  }else{
+     e.currentTarget.classList.add('bg-red-500','text-white','shake');
+     box.children[q.ans].classList.add('bg-green-500','text-white');
+     toast('ผิด!','red');
+     wrongPool.push(q);
+  }
+
+  setTimeout(()=>{ idx++; render(); },900);
+}
+
+function toast(txt,color){
+  const t=document.createElement('div');
+  t.className=`fixed bottom-4 left-1/2 -translate-x-1/2 bg-${color}-600 text-white px-4 py-2 rounded-xl shadow`;
+  t.textContent=txt;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),800);
+}
+
+function summary(){
+  const correct = quiz.length - wrongPool.length;
+  const first = firstRound;
+  const stats = quiz.map(q=>({id:q.id, correct:!wrongPool.includes(q), lv:q.lv, content:q.content}));
+  fetch(`${API}?action=submit_quiz&no=${user.no}&subj=${subj}&part=${part}&first=${first?1:0}&stats=`+encodeURIComponent(JSON.stringify(stats)))
+    .then(r=>r.json()).then(j=>{
+       const {exp}=j;
+       document.getElementById('box').innerHTML=`
+         <h2 class="text-2xl font-bold mb-4">สรุปผล</h2>
+         <p class="mb-2">ได้ ${correct}/${quiz.length} ข้อ</p>
+         <p class="mb-4 text-green-700 font-semibold">+ EXP ${exp}</p>
+         ${wrongPool.length?'<button id="retry" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">ทำข้อที่ผิด ('+wrongPool.length+')</button>':''}
+         <button onclick="location.href='brain.html'"
+                 class="mt-2 bg-gray-200 px-4 py-2 rounded">กลับแผนที่</button>`;
+       if(wrongPool.length){
+          document.getElementById('retry').onclick=()=>{
+              quiz = [...wrongPool]; wrongPool=[]; idx=0; firstRound=false; render();
+          };
+       }
+    });
+}
+</script>
+</body>
+</html>
