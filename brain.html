@@ -1,148 +1,143 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Brain Food – HEAD FACE</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-/* ซ่อน scrollbar */
-.no-scroll::-webkit-scrollbar{display:none}
-.no-scroll{scrollbar-width:none;-ms-overflow-style:none}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Brain Food – HEAD FACE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ซ่อน scrollbar */
+    .no-scroll::-webkit-scrollbar{display:none}
+    .no-scroll{scrollbar-width:none;-ms-overflow-style:none}
 
-/* จาน / node */
-.bf-plate{
-  @apply flex flex-col items-center gap-2 cursor-pointer transition transform;
-}
-.bf-plate:hover{transform:scale(1.08)}
-.bf-plate.active .plate-circle{ @apply ring-4 ring-blue-400; }
+    /* node | plate */
+    .bf-plate{display:flex;flex-direction:column;align-items:center;gap:.35rem;cursor:pointer;transition:transform .2s}
+    .bf-plate:hover{transform:scale(1.08)}
+    .plate-circle{width:4.5rem;height:4.5rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;
+                  @apply bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs font-semibold shadow-lg}
+    .bf-plate.active .plate-circle{box-shadow:0 0 0 4px rgba(96,165,250,.6)}
 
-/* เส้นเชื่อม */
-.bf-line{
-  @apply absolute left-1/2 -translate-x-1/2 top-[40px] w-px bg-blue-300;
-}
-/* ขนาดวงกลม */
-.plate-circle{
-  @apply w-24 h-24 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg;
-}
-</style>
+    /* line */
+    .bf-line{position:absolute;left:50%;transform:translateX(-50%);width:2px;background:#93c5fd}
+  </style>
 </head>
 <body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex flex-col">
 
-<!-- Header -->
+<!-- ░░ Header ░░ -->
 <header class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
   <h1 class="text-xl font-bold text-blue-700">Brain Food</h1>
-  <a href="home.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">
-    กลับหน้าหลัก
-  </a>
+  <a href="home.html"
+     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-xl font-semibold">กลับหน้าหลัก</a>
 </header>
 
-<!-- Subject bar -->
-<section class="bg-white/70 pt-4 pb-2 shadow-inner">
-  <div id="subjBar" class="flex gap-4 overflow-x-auto no-scroll px-6"></div>
+<!-- ░░ SUBJECT BAR ░░ -->
+<section class="bg-white/70 shadow-inner">
+  <div id="subjBar" class="flex gap-4 overflow-x-auto no-scroll px-6 py-3"></div>
 </section>
 
-<!-- Course Map -->
+<!-- ░░ COURSE MAP ░░ -->
 <main class="flex-1 overflow-auto p-6">
-  <div id="mapZone" class="relative mx-auto max-w-lg"></div>
+  <div id="mapZone" class="relative mx-auto max-w-xl"></div>
 </main>
 
-<!-- Modal -->
+<!-- modal (เผื่อใช้ภายหลัง) -->
 <div id="modal-root"></div>
 
 <script>
-/* ---------------- CONFIG ---------------- */
+/* ---------- CONFIG ---------- */
 const API = "https://script.google.com/macros/s/AKfycbxQyMf_zMNuZoa_JLqa2S5LJYgxd1HwDfnMw-3_FtMH-mN2Db72O4xfqpU17zg2mebPkw/exec";
 
-/* ใช้แมปชื่อ (thai) เมื่อตัว API ยังไม่ส่ง name มา */
+/* fallback ชื่อวิชา */
 const SUBJ_NAMES = {
   ST:"วิทยาศาสตร์", ET:"ภาษาอังกฤษ", TH:"ภาษาไทย", MT:"คณิตศาสตร์",
-  SO:"สังคม", HE:"สุขศึกษา", PE:"พลศึกษา", HS:"ประวัติศาสตร์",
+  SO:"สังคมศึกษา", HE:"สุขศึกษา", PE:"พลศึกษา", HS:"ประวัติศาสตร์",
   CH:"ภาษาจีน", ME:"คณิตสากล", SE:"วิทย์สากล", EN:"ENS",
   SR:"เทคโนโลยี", SW:"วิทยาการคอมฯ", SD:"ออกแบบเว็บไซต์", AA:"การงานอาชีพ"
 };
 
-/* ---------------- Subject Bar ---------------- */
-(async ()=>{
+/* ---------- SUBJECT BAR ---------- */
+(async()=>{
   const bar = document.getElementById("subjBar");
   try{
      const j = await fetch(`${API}?action=listSubjects`).then(r=>r.json());
-     if(j.status!=="success") throw "";
-     const subs = j.subjects;                 // [{code,name?},...]
-     bar.innerHTML = subs.map(s=>{
+     if(j.status!=="success") throw "fail";
+     bar.innerHTML = j.subjects.map(s=>{
         const name = s.name || SUBJ_NAMES[s.code] || s.code;
         return `<button data-code="${s.code}"
-                        class="subj-btn whitespace-nowrap px-4 py-2 bg-blue-100 rounded-xl
-                               hover:bg-blue-200">${name}</button>`;
+                   class="subj-btn whitespace-nowrap px-4 py-2 bg-blue-100 rounded-xl hover:bg-blue-200">
+                   ${name}</button>`;
      }).join("");
-     // bind click
+     /* เลือกวิชา */
      bar.querySelectorAll(".subj-btn").forEach(btn=>{
         btn.onclick = ()=>{
-           bar.querySelectorAll(".subj-btn").forEach(b=>b.classList.remove("bg-blue-600","text-white","active"));
-           btn.classList.add("bg-blue-600","text-white","active");
+           bar.querySelectorAll(".subj-btn").forEach(b=>b.classList.remove("bg-blue-600","text-white"));
+           btn.classList.add("bg-blue-600","text-white");
            loadMap(btn.dataset.code);
         };
      });
-     /* เลือกตัวแรกอัตโนมัติ */
-     bar.querySelector(".subj-btn")?.click();
-  }catch(e){ bar.innerHTML="<p class='text-red-600'>โหลดวิชาไม่สำเร็จ</p>"; }
+     bar.querySelector(".subj-btn")?.click(); // auto load วิชาแรก
+  }catch{ bar.innerHTML = "<p class='text-red-600'>โหลดวิชาไม่สำเร็จ</p>"; }
 })();
 
-/* ---------------- Load & Render Map ---------------- */
+/* ---------- LOAD & DRAW MAP ---------- */
 async function loadMap(subj){
   const zone = document.getElementById("mapZone");
-  zone.innerHTML = "<p class='text-center text-blue-600'>กำลังโหลดบทเรียน…</p>";
+  zone.innerHTML = "<p class='text-center text-blue-700'>กำลังโหลด…</p>";
+
   try{
-     const j = await fetch(`${API}?action=listParts&subj=${subj}`).then(r=>r.json());
-     if(j.status!=="success" || !j.rows?.length) throw "";
-     drawMap(j.rows, zone);
-  }catch(e){
-     zone.innerHTML = "<p class='text-center text-red-600'>โหลดข้อมูลบทไม่สำเร็จ</p>";
-  }
+     const j = await fetch(`${API}?action=listPartsBySubject&subj=${subj}`).then(r=>r.json());
+     if(j.status!=="success" || !j.chapters?.length) throw "no data";
+
+     /* แปลงข้อมูลเป็น rows [{chapter,part,content}] */
+     const rows=[];
+     j.chapters.forEach(ch=>{
+        ch.parts.forEach(p=>{
+            rows.push({ chapter:ch.id, part:p.no, content:p.content.join(", ") });
+        });
+     });
+     renderMap(rows, zone);
+  }catch{ zone.innerHTML="<p class='text-center text-red-600'>โหลดข้อมูลบทไม่สำเร็จ</p>"; }
 }
 
-/* rws = [{id,part,content},…] */
-function drawMap(rows, zone){
-  zone.innerHTML = "";
-  /* รวมตาม part */
-  const parts = {};
+/* rows = [{chapter,part,content}] */
+function renderMap(rows, zone){
+  zone.innerHTML="";          // clear
+  /* จัดหมวดตามบท */
+  const byChap={};
   rows.forEach(r=>{
-     if(!parts[r.part]) parts[r.part]=[];
-     parts[r.part].push(r);
+     if(!byChap[r.chapter]) byChap[r.chapter]=[];
+     byChap[r.chapter].push(r);
   });
-  const sortedParts = Object.keys(parts).sort((a,b)=>a-b);
+  const chapKeys = Object.keys(byChap).sort();         // ST001, ST002 …
 
-  sortedParts.forEach((p,i)=>{
-      const items = parts[p];
-      items.forEach((item,idx)=>{
-        // node
+  chapKeys.forEach((cid,rowIdx)=>{
+     const parts = byChap[cid].sort((a,b)=>a.part-b.part);
+     parts.forEach((p,colIdx)=>{
+        const top  = rowIdx*160;
+        const left = colIdx*180;
+
         zone.insertAdjacentHTML("beforeend",`
-          <div class="bf-plate absolute"
-               style="top:${i*160}px; left:${idx*180}px">
-            <div class="plate-circle bg-gradient-to-br from-blue-400 to-blue-600">${item.content}</div>
-            <span class="text-sm">${item.id}</span>
-          </div>
-        `);
-      });
-      // เส้นต่อตัวถัดไป (ถ้าไม่ใช่ part สุดท้าย)
-      if(i < sortedParts.length-1){
-        zone.insertAdjacentHTML("beforeend",`
-          <div class="bf-line" style="top:${i*160 + 120}px; height:40px;"></div>
-        `);
-      }
+          <div class="bf-plate absolute" style="top:${top}px;left:${left}px">
+            <div class="plate-circle">${p.content}</div>
+            <span class="text-xs text-blue-900">${cid}-P${p.part}</span>
+          </div>`);
+
+        /* เส้นแนวตั้งเพื่อเชื่อมไปแถวล่าง (แสดงใต้ column 0) */
+        if(colIdx===0 && rowIdx<chapKeys.length-1){
+           zone.insertAdjacentHTML("beforeend",
+             `<div class="bf-line" style="top:${top+120}px;height:40px;"></div>`);
+        }
+     });
   });
-  /* กำหนดความสูงให้ mapZone */
-  zone.style.height = `${sortedParts.length*160 + 40}px`;
+  zone.style.height = `${chapKeys.length*160 + 60}px`;
 }
 
-/* ---------------- Modal helper (optional future use) ---------------- */
+/* ---------- Modal helper (ไม่แก้) ---------- */
 function openModal(html){
   document.getElementById("modal-root").innerHTML =
     `<div id="mask" class="fixed inset-0 bg-black/40 z-[90] flex items-center justify-center">
        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">${html}</div></div>`;
-  document.getElementById("mask").onclick = e=>{
-    if(e.target.id==="mask") closeModal();
-  };
+  document.getElementById("mask").onclick = e=>{ if(e.target.id==="mask") closeModal(); };
 }
 function closeModal(){ document.getElementById("modal-root").innerHTML=""; }
 </script>
