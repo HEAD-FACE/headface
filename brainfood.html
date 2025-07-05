@@ -128,12 +128,15 @@ function isDone(val){
     
   function renderMap(chapters){
     mapArea.innerHTML='';
+    
     chapters.forEach((chap,idx)=>{
-      /* ชื่อบท */
-      const h2=document.createElement('h2');
-      h2.textContent=`บทที่ ${idx+1}`;
-      h2.className='mt-6 mb-3 font-bold text-primaryDark';
-      mapArea.appendChild(h2);
+       const rawTitle = chap.parts[0]?.content || '';
+    const chapterName = rawTitle.split(',')[0].trim();      // "สารละลาย"
+
+    const h2 = document.createElement('h2');
+    h2.textContent = `บทที่ ${idx + 1} : ${chapterName}`;  // บทที่ 1 : สารละลาย
+    h2.className   = 'mt-6 mb-3 font-bold text-primaryDark';
+    mapArea.appendChild(h2);
 
       /* แถวจาน */
       const row=document.createElement('div');
